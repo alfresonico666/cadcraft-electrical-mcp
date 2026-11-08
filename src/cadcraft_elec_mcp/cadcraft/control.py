@@ -21,8 +21,16 @@ from ..logging_setup import get_logger
 log = get_logger("cadcraft.control")
 
 READ_ONLY_METHODS = frozenset(
-    {"drawing.inspect", "engine.commands", "cmdline.state", "control.methods", "ping", "ui.inspect",
-     "ui.render", "ui.screenshot"}
+    {
+        "drawing.inspect",
+        "engine.commands",
+        "cmdline.state",
+        "control.methods",
+        "ping",
+        "ui.inspect",
+        "ui.render",
+        "ui.screenshot",
+    }
 )
 
 
@@ -56,7 +64,7 @@ class ControlClient:
 
     def is_available(self) -> bool:
         try:
-            return self.request("ping") == "pong"
+            return bool(self.request("ping") == "pong")
         except (CadCraftConnectionError, CadCraftCommandError):
             return False
 

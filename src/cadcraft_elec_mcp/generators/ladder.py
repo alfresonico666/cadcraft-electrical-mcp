@@ -23,13 +23,12 @@ from ..domain.potentials import potential_kind, rail_sort_key
 from ..drawing import SheetGeometry, add_dot, add_line, add_text
 from ..errors import GenerationError
 from ..symbols import BlockRef, default_symbol
-from ..symbols.base import LABEL_X
 from .context import BuildContext, Wire
 from .crossref import MASTER_SYMBOLS, SLAVE_SYMBOLS, XrefItem
 
 RAIL_PITCH = 5.0
-ELEMENT_GAP = 10.0            # vertical (IEC): room for rotated wire numbers
-ELEMENT_GAP_HORIZONTAL = 16.0 # horizontal (NFPA): wire numbers are written along the rung
+ELEMENT_GAP = 10.0  # vertical (IEC): room for rotated wire numbers
+ELEMENT_GAP_HORIZONTAL = 16.0  # horizontal (NFPA): wire numbers are written along the rung
 POLE_PITCH = 7.5
 LABEL_ZONE = 10.0
 XREF_ZONE_VERTICAL = 16.0
@@ -44,8 +43,8 @@ class LadderPath:
     return_rail: str | None = None
     pe: bool = False
     slot: int | None = None
-    start_ref: str | None = None          # path starts at an anchor instead of a rail
-    end_ref: str | None = None            # path ends at an anchor instead of a rail
+    start_ref: str | None = None  # path starts at an anchor instead of a rail
+    end_ref: str | None = None  # path ends at an anchor instead of a rail
     circuit_kind: PotentialKind | None = None
     poles: int = field(init=False)
 
@@ -66,7 +65,7 @@ class Band:
 @dataclass
 class _Cursor:
     along: float
-    ref: str | None          # "tag:terminal" or rail name
+    ref: str | None  # "tag:terminal" or rail name
     from_rail: str | None
 
 
@@ -119,6 +118,12 @@ class LadderSheet:
             bands.append(Band(b, slots, y0, y1, x0 + b * width, x0 + (b + 1) * width))
         return bands
 
+    def slot_position(self, slot: int) -> tuple[Band, float]:
+        """(band, across position) of a slot."""
+        if slot not in self._slot_of:
+            raise GenerationError(f"Slot {slot + 1} does not exist on this sheet (max {self.capacity}).")
+        return self._slot_of[slot]
+
     @property
     def capacity(self) -> int:
         return len(self._slot_of)
@@ -144,6 +149,15 @@ class LadderSheet:
         k = self.return_rails.index(rail)
         m = len(self.return_rails)
         return band.along_max - zone - (m - 1 - k) * RAIL_PITCH
+
+    def box_start(self, band: Band) -> float:
+        """Along position where a module box drawn in the start reserve begins."""
+        return band.along_min + self._start_margin()
+
+    def box_end_zone(self, band: Band) -> tuple[float, float]:
+        """(start, end) along positions of the end reserve (where an input module box goes)."""
+        start = self.path_limit(band) + 6.0
+        return start, start + self.reserve_end - 2.0
 
     def path_limit(self, band: Band) -> float:
         zone = XREF_ZONE_VERTICAL if self.vertical else XREF_ZONE_HORIZONTAL
@@ -177,8 +191,14 @@ class LadderSheet:
             if not self.vertical:
                 for i, pos in enumerate(band.slots):
                     line_no = self.geo.number * 100 + band.index * len(band.slots) + i + 1
-                    add_text(self.ctx.msp, str(line_no), (band.along_min + 1.0, pos), height=h,
-                             layer="E-GRID", align="MIDDLE_LEFT")
+                    add_text(
+                        self.ctx.msp,
+                        str(line_no),
+                        (band.along_min + 1.0, pos),
+                        height=h,
+                        layer="E-GRID",
+                        align="MIDDLE_LEFT",
+                    )
 
     def _draw_rail(self, band: Band, rail: str, along: float, h: float) -> None:
         kind = potential_kind(self.ctx.project, rail)
@@ -211,8 +231,8 @@ class LadderSheet:
         cursors: list[_Cursor] = []
         start = self.path_start(band)
         for p in range(poles):
-            if path.start_ref is not None:
-                cursors.append(_Cursor(start - 2.0, path.start_ref, None))
+            if path.start_ref is not None:  # e.g. PLC output: wire leaves the module box edge
+                cursors.append(_Cursor(start - 5.0, path.start_ref, None))
             else:
                 rail = path.supply[p]
                 if rail not in self.supply_rails:
@@ -245,8 +265,12 @@ class LadderSheet:
                 raise GenerationError(f"Return rail {path.return_rail!r} is not on this sheet.")
             target = self.return_along(band, path.return_rail)
             cursor = cursors[0]
-            self._wire(pos, offsets[0], cursor, target, path.return_rail, path, column, to_rail=path.return_rail)
-            add_dot(self.ctx.msp, self.pt(pos, target, offsets[0]), layer=self._layer_for(path.return_rail, path))
+            self._wire(
+                pos, offsets[0], cursor, target, path.return_rail, path, column, to_rail=path.return_rail
+            )
+            add_dot(
+                self.ctx.msp, self.pt(pos, target, offsets[0]), layer=self._layer_for(path.return_rail, path)
+            )
         elif path.end_ref is not None:
             target = self.path_limit(band) + 4.0 + 2.0
             self._wire(pos, offsets[0], cursors[0], target, path.end_ref, path, column)
@@ -266,11 +290,23 @@ class LadderSheet:
             lines = textwrap.wrap(label, width_chars)[:3]
             top = band.along_min + 1.0
             for i, line in enumerate(lines):
-                add_text(self.ctx.msp, line, (pos, -(top + i * h * 1.25)), height=h, layer="E-TEXT",
-                         align="TOP_CENTER")
+                add_text(
+                    self.ctx.msp,
+                    line,
+                    (pos, -(top + i * h * 1.25)),
+                    height=h,
+                    layer="E-TEXT",
+                    align="TOP_CENTER",
+                )
         else:  # rung description under the rung (below terminal numbers and actuators)
-            add_text(self.ctx.msp, label, (self.path_start(band) + 1.0, pos - 8.0), height=h,
-                     layer="E-TEXT", align="TOP_LEFT")
+            add_text(
+                self.ctx.msp,
+                label,
+                (self.path_start(band) + 1.0, pos - 8.0),
+                height=h,
+                layer="E-TEXT",
+                align="TOP_LEFT",
+            )
 
     def _layer_for(self, rail: str | None, path: LadderPath) -> str:
         if rail is not None:
@@ -305,7 +341,9 @@ class LadderSheet:
         kind = self._pole_kind(path, pole)
         rail_name = cursor.from_rail or to_rail
         if to_rail is not None and potential_kind(self.ctx.project, to_rail) in {
-            PotentialKind.AC_NEUTRAL, PotentialKind.PE, PotentialKind.DC_MINUS
+            PotentialKind.AC_NEUTRAL,
+            PotentialKind.PE,
+            PotentialKind.DC_MINUS,
         }:
             kind = potential_kind(self.ctx.project, to_rail)
         layer = self.ctx.profile.wire_layer(kind)
@@ -316,24 +354,33 @@ class LadderSheet:
         if abs(target_along - cursor.along) >= 6.0:
             self._wire_number(p1, p2, number)
         color = self.ctx.profile.wire_color(kind)
-        self.ctx.add_wire(Wire(
-            number=number,
-            from_ref=cursor.ref or "?",
-            to_ref=to_ref,
-            potential_kind=kind,
-            color_code=color.code,
-            cross_section_mm2=self.ctx.profile.cross_sections_mm2.get(kind, 0.75),
-            sheet=self.geo.number,
-            ref=f"/{self.geo.number}.{column}" if self.vertical else str(self.geo.number * 100 + column),
-            potential=rail_name,
-        ))
+        self.ctx.add_wire(
+            Wire(
+                number=number,
+                from_ref=cursor.ref or "?",
+                to_ref=to_ref,
+                potential_kind=kind,
+                color_code=color.code,
+                cross_section_mm2=self.ctx.profile.cross_sections_mm2.get(kind, 0.75),
+                sheet=self.geo.number,
+                ref=f"/{self.geo.number}.{column}" if self.vertical else str(self.geo.number * 100 + column),
+                potential=rail_name,
+            )
+        )
 
     def _wire_number(self, p1: tuple[float, float], p2: tuple[float, float], number: str) -> None:
         h = self.text.wire_number
         mx, my = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
         if self.vertical:
-            add_text(self.ctx.msp, number, (mx + 0.8 + h, my), height=h, layer="E-WIRENO",
-                     align="BOTTOM_CENTER", rotation=90)
+            add_text(
+                self.ctx.msp,
+                number,
+                (mx + 0.8 + h, my),
+                height=h,
+                layer="E-WIRENO",
+                align="BOTTOM_CENTER",
+                rotation=90,
+            )
         else:
             add_text(self.ctx.msp, number, (mx, my + 0.8), height=h, layer="E-WIRENO", align="BOTTOM_CENTER")
 
@@ -365,43 +412,85 @@ class LadderSheet:
             terminals.append(["", ""])
 
         designation = self.ctx.designation(device)
+        columns_used = slots_needed(path, self.vertical, self._slot_pitch()) if self.vertical else 1
         description = element.label if element.label is not None else device.description
         msp = self.ctx.msp
 
         if symbol.spans_poles:
-            self._insert(ref, self.pt(pos, along), designation, description, None,
-                         label_at=self._label_point(pos, along, symbol.length, symbol.width_for(poles, POLE_PITCH) / 2))
+            self._insert(
+                ref,
+                self.pt(pos, along),
+                designation,
+                description,
+                None,
+                label_at=self._label_point(
+                    pos, along, symbol.length, symbol.width_for(poles, POLE_PITCH) / 2
+                ),
+                columns=columns_used,
+            )
             for p in range(poles):
-                self._wire(pos, offsets[p], cursors[p], along, f"{device.tag}:{terminals[p][0]}", path,
-                           column, pole=p)
+                self._wire(
+                    pos,
+                    offsets[p],
+                    cursors[p],
+                    along,
+                    f"{device.tag}:{terminals[p][0]}",
+                    path,
+                    column,
+                    pole=p,
+                )
                 tx, ty = self.pt(pos, along + 1.2, offsets[p])
-                add_text(msp, terminals[p][0], (tx - 0.8, ty) if self.vertical else (tx, ty + 0.8),
-                         height=self.text.terminal, layer="E-TERMINAL",
-                         align="TOP_RIGHT" if self.vertical else "BOTTOM_LEFT")
+                add_text(
+                    msp,
+                    terminals[p][0],
+                    (tx - 0.8, ty) if self.vertical else (tx, ty + 0.8),
+                    height=self.text.terminal,
+                    layer="E-TERMINAL",
+                    align="TOP_RIGHT" if self.vertical else "BOTTOM_LEFT",
+                )
         else:
             for p in range(poles):
-                self._wire(pos, offsets[p], cursors[p], along, f"{device.tag}:{terminals[p][0]}", path,
-                           column, pole=p)
+                self._wire(
+                    pos,
+                    offsets[p],
+                    cursors[p],
+                    along,
+                    f"{device.tag}:{terminals[p][0]}",
+                    path,
+                    column,
+                    pole=p,
+                )
                 # labels beside the outermost pole (right in IEC, top in NFPA); actuator on pole 0
                 labelled = p == (poles - 1 if self.vertical else 0)
                 pole_ref = ref if p == 0 else self.ctx.symbols.ensure(symbol_id, 1, secondary=True)
-                self._insert(pole_ref, self.pt(pos, along, offsets[p]), designation if labelled else "",
-                             description if labelled else "", terminals[p],
-                             label_at=self._label_point(pos, along, symbol.length,
-                                                        symbol.half_width - offsets[p]))
+                self._insert(
+                    pole_ref,
+                    self.pt(pos, along, offsets[p]),
+                    designation if labelled else "",
+                    description if labelled else "",
+                    terminals[p],
+                    label_at=self._label_point(pos, along, symbol.length, symbol.half_width - offsets[p]),
+                    columns=columns_used,
+                )
                 if not symbol.terminal_end:
                     cursors[p] = _Cursor(along + symbol.length, f"{device.tag}:{terminals[p][1]}", None)
             if poles > 1:
                 a = along + 4.8
-                add_line(msp, self.pt(pos, a, offsets[0] - 1.3), self.pt(pos, a, offsets[-1] - 1.3),
-                         layer="E-LINK")
+                add_line(
+                    msp, self.pt(pos, a, offsets[0] - 1.3), self.pt(pos, a, offsets[-1] - 1.3), layer="E-LINK"
+                )
 
         if symbol_id in MASTER_SYMBOLS or symbol_id in SLAVE_SYMBOLS:
-            self._register_xref(band, pos, slot, device.tag, symbol_id, terminals, along, symbol.length,
-                                offsets)
+            self._register_xref(
+                band, pos, slot, device.tag, symbol_id, terminals, along, symbol.length, offsets
+            )
 
         if path.pe and element is path.elements[-1]:
-            half = symbol.width_for(poles, POLE_PITCH) / 2 if symbol.spans_poles                 else -offsets[0] + symbol.half_width
+            half = (
+                symbol.width_for(poles, POLE_PITCH) / 2
+                if symbol.spans_poles
+                else -offsets[0] + symbol.half_width
+            )
             self._draw_pe(pos, along, symbol.length, half, device.tag, column)
         return symbol.terminal_end
 
@@ -418,20 +507,45 @@ class LadderSheet:
         terminals: list[str] | None,
         *,
         label_at: tuple[float, float] | None = None,
+        columns: int = 1,
     ) -> None:
-        blockref = self.ctx.msp.add_blockref(ref.name, at, dxfattribs={"layer": "E-SYMBOL",
-                                                                        "rotation": self.rotation})
+        blockref = self.ctx.msp.add_blockref(
+            ref.name, at, dxfattribs={"layer": "E-SYMBOL", "rotation": self.rotation}
+        )
         # NFPA ladders keep descriptions out of the rung (they go to the device list / rung text)
-        values = {"TAG": tag, "DESC": description if self.vertical else ""}
+        lines = self._wrap_description(ref, at, description, columns) if self.vertical else [""]
+        values = {"TAG": tag, "DESC": lines[0]}
         if terminals is not None:
             values["T1"] = terminals[0]
-            values["T2"] = terminals[1] if len(terminals) > 1 else ""
+            # a feed-through terminal has a single number
+            values["T2"] = terminals[1] if len(terminals) > 1 and ref.symbol.id != "terminal" else ""
         blockref.add_auto_attribs(values)
         if self.rotation:
             for attrib in blockref.attribs:
                 attrib.dxf.rotation = 0.0
                 if attrib.dxf.tag == "TAG" and label_at is not None:
                     attrib.set_placement(label_at, align=TextEntityAlignment.BOTTOM_CENTER)
+        # continuation lines of a long description, under the DESC attribute
+        h = self.text.general
+        x = at[0] + self.ctx.symbols.label_x(ref.symbol, ref.poles)
+        y = at[1] - ref.symbol.length / 2 - 0.8
+        for i, line in enumerate(lines[1:], start=1):
+            add_text(self.ctx.msp, line, (x, y - i * h * 1.25), height=h, layer="E-TEXT", align="TOP_LEFT")
+
+    def _wrap_description(
+        self, ref: BlockRef, at: tuple[float, float], description: str, columns: int
+    ) -> list[str]:
+        """Split a description so it stays inside the column(s) of its path (max 3 lines)."""
+        if not description:
+            return [""]
+        column = self.geo.column_at(at[0])
+        right = self.geo.column_center(column) + self.geo.column_width * (columns - 0.5)
+        available = right - (at[0] + self.ctx.symbols.label_x(ref.symbol, ref.poles)) - 1.0
+        chars = max(int(available / (self.text.general * 0.5)), 8)
+        lines = textwrap.wrap(description, chars, break_long_words=False) or [""]
+        if len(lines) > 3:
+            lines = [*lines[:2], textwrap.shorten(" ".join(lines[2:]), chars, placeholder="…")]
+        return lines
 
     def _register_xref(
         self,
@@ -447,23 +561,26 @@ class LadderSheet:
     ) -> None:
         if symbol_id in MASTER_SYMBOLS:
             if self.vertical:
-                anchor = (pos - self.geo.column_width / 2 + 1.0,
-                          -(band.along_max - XREF_ZONE_VERTICAL + 2.0))
+                anchor = (pos - self.geo.column_width / 2 + 1.0, -(band.along_max - XREF_ZONE_VERTICAL + 2.0))
             else:
-                last_return = self.return_along(band, self.return_rails[-1]) if self.return_rails \
+                last_return = (
+                    self.return_along(band, self.return_rails[-1])
+                    if self.return_rails
                     else band.along_max - XREF_ZONE_HORIZONTAL
+                )
                 anchor = (last_return + 2.0, pos + 1.2)
-        elif self.vertical:
-            anchor = (pos + offsets[-1] + LABEL_X, -(along + length - 0.3))
+        elif self.vertical:  # left of the wire, just below the contact (labels stay on the right)
+            anchor = (pos + offsets[0] - 1.0, -(along + length + 0.8))
         else:  # centred under the contact, below its terminal numbers
             anchor = (along + length / 2, pos - offsets[-1] - 4.0)
         pairs = ["-".join(t for t in pair if t) for pair in terminals]
-        self.ctx.xrefs.add(XrefItem(device, symbol_id, [p for p in pairs if p], self.slot_ref(slot), anchor,
-                                    self.vertical))
+        self.ctx.xrefs.add(
+            XrefItem(device, symbol_id, [p for p in pairs if p], self.slot_ref(slot), anchor, self.vertical)
+        )
 
     def _draw_pe(self, pos: float, along: float, length: float, half: float, tag: str, column: int) -> None:
         mid = along + length / 2
-        side = -1.0 if self.vertical else 1.0     # away from the designation text
+        side = -1.0 if self.vertical else 1.0  # away from the designation text
         start = self.pt(pos, mid, side * half)
         end = self.pt(pos, mid, side * (half + 4.0))
         layer = self.ctx.profile.wire_layer(PotentialKind.PE)
@@ -473,9 +590,19 @@ class LadderSheet:
             {"TAG": "", "DESC": "", "T1": "PE"}
         )
         color = self.ctx.profile.wire_color(PotentialKind.PE)
-        self.ctx.add_wire(Wire("PE", f"{tag}:PE", "PE", PotentialKind.PE, color.code,
-                               self.ctx.profile.cross_sections_mm2.get(PotentialKind.PE, 2.5),
-                               self.geo.number, f"/{self.geo.number}.{column}", "PE"))
+        self.ctx.add_wire(
+            Wire(
+                "PE",
+                f"{tag}:PE",
+                "PE",
+                PotentialKind.PE,
+                color.code,
+                self.ctx.profile.cross_sections_mm2.get(PotentialKind.PE, 2.5),
+                self.geo.number,
+                f"/{self.geo.number}.{column}",
+                "PE",
+            )
+        )
 
 
 def slots_needed(path: LadderPath, vertical: bool, slot_pitch: float) -> int:
@@ -496,8 +623,7 @@ def paginate(
     for path in paths:
         span = width(path)
         wanted = path.slot if path.slot is not None else next_slot
-        if wanted < next_slot:
-            wanted = next_slot
+        wanted = max(wanted, next_slot)
         if wanted + span > capacity:
             pages.append([])
             wanted = 0

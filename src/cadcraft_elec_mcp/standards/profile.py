@@ -112,7 +112,9 @@ class StandardProfile(_Strict):
     def all_layers(self) -> list[LayerDef]:
         wires = [
             LayerDef(
-                name=self.wire_layer(kind), color=color.aci, linetype="Continuous",
+                name=self.wire_layer(kind),
+                color=color.aci,
+                linetype="Continuous",
                 lineweight=self.lineweights.wire,
             )
             for kind, color in self.wire_colors.items()

@@ -39,9 +39,7 @@ class NoActiveProjectError(ProjectError):
     code = "no_active_project"
 
     def __init__(self) -> None:
-        super().__init__(
-            "No project is open.", hint="Call project_create or project_open first."
-        )
+        super().__init__("No project is open.", hint="Call project_create or project_open first.")
 
 
 class NotFoundError(ProjectError):

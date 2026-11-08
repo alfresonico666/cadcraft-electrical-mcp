@@ -38,7 +38,10 @@ def candidate_dirs() -> list[Path]:
                 dirs += [Path(base) / "CADCraft", Path(base) / "ArtCraft" / "CADCraft"]
         local = os.environ.get("LOCALAPPDATA")
         if local:
-            dirs += [Path(local) / "Programs" / "ArtCraft" / "CADCraft", Path(local) / "Programs" / "CADCraft"]
+            dirs += [
+                Path(local) / "Programs" / "ArtCraft" / "CADCraft",
+                Path(local) / "Programs" / "CADCraft",
+            ]
     return dirs
 
 

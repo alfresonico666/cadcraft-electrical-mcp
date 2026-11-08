@@ -46,7 +46,14 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PL"]
-ignore = ["PLR0913", "PLR2004", "PLR0912", "PLR0915", "PLR0911", "RUF001", "RUF002", "RUF003"]
+ignore = [
+  "PLR0913", "PLR0917", "PLR2004", "PLR0912", "PLR0915", "PLR0911",  # complexity: tool signatures mirror MCP schemas
+  "PLC0415",                                                         # lazy imports keep startup fast / avoid cycles
+  "RUF001", "RUF002", "RUF003",                                       # Spanish text and unicode symbols
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E501"]   # long Markdown lines in generated docs
 
 [tool.mypy]
 python_version = "3.11"
@@ -55,6 +62,10 @@ packages = ["cadcraft_elec_mcp"]
 ignore_missing_imports = true
 warn_unused_ignores = true
 check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["ezdxf", "ezdxf.*"]
+implicit_reexport = true
 
 [[tool.mypy.overrides]]
 module = ["cadcraft_elec_mcp.domain.*", "cadcraft_elec_mcp.standards.*", "cadcraft_elec_mcp.validation.*"]

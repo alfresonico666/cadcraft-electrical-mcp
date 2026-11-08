@@ -45,9 +45,7 @@ class Designation:
             parts[sign] = value
             position = match.end()
         if position != len(raw) or "-" not in parts:
-            raise DesignationError(
-                f"Invalid designation {text!r}: a product aspect ('-XX1') is required."
-            )
+            raise DesignationError(f"Invalid designation {text!r}: a product aspect ('-XX1') is required.")
         return cls(
             product=parts["-"],
             function=parts.get("="),
@@ -79,7 +77,7 @@ def tag_number(tag: str, prefix: str) -> int | None:
     """Number part of ``tag`` when it is ``prefix`` + digits, else ``None``."""
     if not tag.startswith(prefix):
         return None
-    rest = tag[len(prefix):]
+    rest = tag[len(prefix) :]
     return int(rest) if rest.isdigit() else None
 
 

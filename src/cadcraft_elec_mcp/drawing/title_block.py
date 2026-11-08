@@ -29,8 +29,22 @@ from .sheet_frame import SheetGeometry
 log = get_logger("drawing.title_block")
 
 FIELDS = (
-    "company", "client", "plant", "project_title", "project_code", "machine", "sheet_title", "file",
-    "standard", "author", "reviewer", "date", "revision", "sheet", "sheets", "description",
+    "company",
+    "client",
+    "plant",
+    "project_title",
+    "project_code",
+    "machine",
+    "sheet_title",
+    "file",
+    "standard",
+    "author",
+    "reviewer",
+    "date",
+    "revision",
+    "sheet",
+    "sheets",
+    "description",
 )
 _PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
@@ -74,19 +88,26 @@ class TitleBlockBuilder:
     def _parametric(self, block: BlockLayout, width: float, height: float) -> None:
         text = self.profile.text
         label_h = text.minimum
-        block.add_lwpolyline([(0, 0), (width, 0), (width, height), (0, height)], close=True,
-                             dxfattribs={"layer": "E-FRAME"})
+        block.add_lwpolyline(
+            [(0, 0), (width, 0), (width, height), (0, height)], close=True, dxfattribs={"layer": "E-FRAME"}
+        )
         for label, field, fx0, fy0, fx1, fy1, size in _CELLS:
             x0, y0, x1, y1 = fx0 * width, fy0 * height, fx1 * width, fy1 * height
-            block.add_lwpolyline([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], close=True,
-                                 dxfattribs={"layer": "E-TITLE"})
+            block.add_lwpolyline(
+                [(x0, y0), (x1, y0), (x1, y1), (x0, y1)], close=True, dxfattribs={"layer": "E-TITLE"}
+            )
             if label:
-                lbl = block.add_text(label, height=label_h * 0.8,
-                                     dxfattribs={"layer": "E-TITLE", "style": TEXT_STYLE})
+                lbl = block.add_text(
+                    label, height=label_h * 0.8, dxfattribs={"layer": "E-TITLE", "style": TEXT_STYLE}
+                )
                 lbl.set_placement((x0 + 1.0, y1 - 0.8), align=TextEntityAlignment.TOP_LEFT)
             value_h = min(getattr(text, size), (y1 - y0) * 0.45)
-            attdef = block.add_attdef(field.upper(), insert=(x0 + 1.5, y0 + 1.5), height=value_h,
-                                      dxfattribs={"layer": "E-TITLE", "style": TEXT_STYLE})
+            attdef = block.add_attdef(
+                field.upper(),
+                insert=(x0 + 1.5, y0 + 1.5),
+                height=value_h,
+                dxfattribs={"layer": "E-TITLE", "style": TEXT_STYLE},
+            )
             attdef.set_placement((x0 + 1.5, y0 + 1.5), align=TextEntityAlignment.BOTTOM_LEFT)
 
     # -- company template --------------------------------------------------------------------------
@@ -119,7 +140,7 @@ class TitleBlockBuilder:
                 insert = entity.dxf.insert
                 height = entity.dxf.height
             elif entity.dxftype() == "MTEXT":
-                raw = entity.plain_text()
+                raw = entity.plain_text()  # type: ignore[attr-defined]
                 insert = entity.dxf.insert
                 height = entity.dxf.char_height
             else:
@@ -127,8 +148,12 @@ class TitleBlockBuilder:
             match = _PLACEHOLDER.search(raw)
             if not match or match.group(1) not in FIELDS:
                 continue
-            block.add_attdef(match.group(1).upper(), insert=(insert.x, insert.y), height=height,
-                             dxfattribs={"layer": entity.dxf.layer, "style": TEXT_STYLE})
+            block.add_attdef(
+                match.group(1).upper(),
+                insert=(insert.x, insert.y),
+                height=height,
+                dxfattribs={"layer": entity.dxf.layer, "style": TEXT_STYLE},
+            )
             block.delete_entity(entity)
 
     # -- insertion -------------------------------------------------------------------------------

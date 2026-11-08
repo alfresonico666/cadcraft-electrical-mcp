@@ -5,6 +5,11 @@ from .library import BlockRef, SymbolLibrary
 from .registry import TerminalAllocator, default_symbol, get_symbol, symbols_for_style
 
 __all__ = [
-    "BlockRef", "SymbolDef", "SymbolLibrary", "TerminalAllocator", "default_symbol", "get_symbol",
+    "BlockRef",
+    "SymbolDef",
+    "SymbolLibrary",
+    "TerminalAllocator",
+    "default_symbol",
+    "get_symbol",
     "symbols_for_style",
 ]

@@ -25,6 +25,10 @@ def configure_logging(level: str = "INFO", log_dir: Path | None = None) -> loggi
     stderr_handler.setFormatter(logging.Formatter(_FORMAT))
     logger.addHandler(stderr_handler)
 
+    # third-party libraries are chatty at INFO (ezdxf reports every dictionary it creates)
+    for noisy in ("ezdxf", "fontTools", "matplotlib"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
     if log_dir is not None:
         try:
             log_dir.mkdir(parents=True, exist_ok=True)

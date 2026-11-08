@@ -100,8 +100,8 @@ class CadCraftService:
                 hint=f"Run: cadcraft --control {self.settings.control_port}",
             )
         app = find_app(self.settings.cadcraft_app, self.cli.executable)
-        flags = subprocess.DETACHED_PROCESS if sys.platform == "win32" else 0  # type: ignore[attr-defined]
-        subprocess.Popen(  # noqa: S603 - fixed executable path
+        flags = subprocess.DETACHED_PROCESS if sys.platform == "win32" else 0
+        subprocess.Popen(
             [str(app), str(path), "--control", str(self.settings.control_port)],
             creationflags=flags,
             close_fds=True,

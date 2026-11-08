@@ -57,9 +57,7 @@ def symbols_for_style(style: str) -> dict[str, SymbolDef]:
 def get_symbol(style: str, symbol_id: str) -> SymbolDef:
     table = symbols_for_style(style)
     if symbol_id not in table:
-        raise SymbolError(
-            f"Unknown symbol {symbol_id!r}.", hint=f"Available: {', '.join(sorted(table))}"
-        )
+        raise SymbolError(f"Unknown symbol {symbol_id!r}.", hint=f"Available: {', '.join(sorted(table))}")
     return table[symbol_id]
 
 
@@ -92,21 +90,32 @@ class TerminalAllocator:
         if symbol_id == "lamp":
             return [["X1", "X2"]]
         if symbol_id in {"sensor_no", "limit_switch_no"} and kind in {
-            DeviceKind.SENSOR, DeviceKind.PRESSURE_SENSOR, DeviceKind.MEASURING_SENSOR
+            DeviceKind.SENSOR,
+            DeviceKind.PRESSURE_SENSOR,
+            DeviceKind.MEASURING_SENSOR,
         }:
             return [["1", "4"]]
         if symbol_id == "motor":
             names = ["U1", "V1", "W1"] if poles >= 3 else ["L", "N"][:poles]
             return [[n, ""] for n in names]
         if symbol_id in {"psu", "device_box"}:
-            names = ["L1", "L2", "L3"] if poles >= 3 else ["L", "N"][:poles]
+            # single pole box = DC supply input (L+); 2 poles = L/N; 3 poles = L1/L2/L3
+            names = ["L1", "L2", "L3"] if poles >= 3 else (["L", "N"] if poles == 2 else ["L+"])
             return [[n, ""] for n in names]
         if symbol_id in {"contact_no", "contact_nc"} and kind in {DeviceKind.OVERLOAD, DeviceKind.MPCB}:
             return [["95", "96"]] if symbol_id == "contact_nc" else [["97", "98"]]
         if symbol_id in {"power_contact", "mcb", "mpcb", "fuse", "disconnector", "overload"}:
             return [[str(2 * i + 1), str(2 * i + 2)] for i in range(poles)]
-        if symbol_id in {"contact_no", "contact_nc", "pushbutton_no", "pushbutton_nc", "estop", "selector",
-                         "sensor_no", "limit_switch_no"}:
+        if symbol_id in {
+            "contact_no",
+            "contact_nc",
+            "pushbutton_no",
+            "pushbutton_nc",
+            "estop",
+            "selector",
+            "sensor_no",
+            "limit_switch_no",
+        }:
             self._aux_seq[device] += 1
             n = self._aux_seq[device]
             no = symbol_id in {"contact_no", "pushbutton_no", "selector", "sensor_no", "limit_switch_no"}

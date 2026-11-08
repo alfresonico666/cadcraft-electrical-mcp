@@ -233,11 +233,11 @@ class Placement(_Model):
 
 class CabinetSpec(_Model):
     enclosure_catalog_id: str | None = None
-    enclosure_width: float = Field(default=500, gt=0)
-    enclosure_height: float = Field(default=400, gt=0)
+    enclosure_width: float = Field(default=400, gt=0)
+    enclosure_height: float = Field(default=500, gt=0)
     enclosure_depth: float = Field(default=250, gt=0)
-    plate_width: float = Field(default=450, gt=0)
-    plate_height: float = Field(default=350, gt=0)
+    plate_width: float = Field(default=350, gt=0)
+    plate_height: float = Field(default=450, gt=0)
     plate_margin: float = Field(default=15, ge=0)
     duct_width: float = Field(default=40, gt=0)
     duct_depth: float = Field(default=60, gt=0)

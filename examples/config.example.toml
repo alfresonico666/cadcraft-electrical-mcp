@@ -1,0 +1,18 @@
+# Copia este archivo a %APPDATA%\cadcraft-elec-mcp\config.toml y ajusta lo necesario.
+# Todas las claves son opcionales (ver docs/CONFIGURATION.md).
+
+# cadcraft_cli = "C:/Program Files/CADCraft/cadcraft-cli.exe"
+# cadcraft_app = "C:/Program Files/CADCraft/cadcraft.exe"
+control_port = 7979
+cli_timeout_s = 180
+
+workspace_dir = "C:/Users/<usuario>/Documents/CadElec"
+# library_models_dir = "C:/Users/<usuario>/Documents/CadElec/library"
+library_catalogs = [
+  # "//servidor/ingenieria/cad/catalogo-equipo.yaml",
+]
+
+# title_block_template = "C:/Users/<usuario>/Documents/CadElec/plantillas/cajetin.dxf"
+default_profile = "iec"      # iec | iec_legacy | nfpa
+font = "arial.ttf"
+log_level = "INFO"

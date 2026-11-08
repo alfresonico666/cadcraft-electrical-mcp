@@ -78,9 +78,9 @@ class SymbolDef:
     length: float
     draw: DrawFn
     category: str = "control"
-    spans_poles: bool = False      # drawn once across all poles (motor, PSU)
-    terminal_end: bool = False     # no output connection (motor, ground)
-    half_width: float = 3.0        # used for label placement
+    spans_poles: bool = False  # drawn once across all poles (motor, PSU)
+    terminal_end: bool = False  # no output connection (motor, ground)
+    half_width: float = 3.0  # used for label placement
     tags: tuple[str, ...] = field(default_factory=tuple)
 
     def width_for(self, poles: int, pitch: float) -> float:

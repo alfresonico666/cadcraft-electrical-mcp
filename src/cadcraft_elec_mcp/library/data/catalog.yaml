@@ -1,0 +1,104 @@
+# Built-in device catalog. Dimensions are typical values (width x height of the FRONT view, mm) and
+# must be checked against the manufacturer datasheet before releasing a cabinet layout.
+# Vendor CAD models are NOT shipped (licences): import your own with `library_import_model`.
+devices:
+  # --- Protection / switching -------------------------------------------------------------------
+  - {id: generic-mcb-1p, description: "Interruptor magnetotérmico 1P", kind: mcb, width_mm: 18, height_mm: 90, depth_mm: 75, terminals: ["1", "2"]}
+  - {id: generic-mcb-2p, description: "Interruptor magnetotérmico 2P", kind: mcb, width_mm: 36, height_mm: 90, depth_mm: 75, terminals: ["1", "2", "3", "4"]}
+  - {id: generic-mcb-3p, description: "Interruptor magnetotérmico 3P", kind: mcb, width_mm: 54, height_mm: 90, depth_mm: 75, terminals: ["1", "2", "3", "4", "5", "6"]}
+  - {id: generic-mpcb, description: "Guardamotor 3P", kind: mpcb, width_mm: 45, height_mm: 90, depth_mm: 97, terminals: ["1", "2", "3", "4", "5", "6"]}
+  - {id: generic-contactor-9a, description: "Contactor 9 A, bobina 24 VDC", kind: contactor, width_mm: 45, height_mm: 85, depth_mm: 90, terminals: ["1", "2", "3", "4", "5", "6", "A1", "A2", "13", "14"]}
+  - {id: generic-relay-1co, description: "Relé de interfaz 1 CO 24 VDC", kind: relay, width_mm: 6.2, height_mm: 90, depth_mm: 70, terminals: ["A1", "A2", "11", "12", "14"]}
+  - {id: generic-relay-2co, description: "Relé 2 CO 24 VDC con base", kind: relay, width_mm: 16, height_mm: 90, depth_mm: 70, terminals: ["A1", "A2", "11", "12", "14", "21", "22", "24"]}
+  - {id: generic-safety-relay, description: "Relé de seguridad", kind: safety_relay, width_mm: 22.5, height_mm: 100, depth_mm: 120}
+  - {id: generic-main-switch, description: "Interruptor general 3P", kind: main_switch, mount: door, width_mm: 64, height_mm: 64, depth_mm: 70}
+  - {id: generic-fuse-holder, description: "Portafusible 10x38", kind: fuse, width_mm: 18, height_mm: 81, depth_mm: 60}
+  # --- Power supplies -----------------------------------------------------------------------------
+  - {id: generic-psu-24v-5a, description: "Fuente 24 VDC 5 A", kind: psu, width_mm: 40, height_mm: 125, depth_mm: 125, terminals: ["L", "N", "PE", "+", "+", "-", "-"]}
+  - {id: generic-psu-24v-10a, description: "Fuente 24 VDC 10 A", kind: psu, width_mm: 60, height_mm: 125, depth_mm: 125, terminals: ["L", "N", "PE", "+", "+", "-", "-"]}
+  # --- Terminals ----------------------------------------------------------------------------------
+  - {id: generic-terminal-2.5, description: "Borne de paso 2.5 mm²", kind: terminal_strip, width_mm: 5.2, height_mm: 50, depth_mm: 40}
+  - {id: generic-terminal-pe, description: "Borne de tierra 2.5 mm²", kind: terminal_strip, width_mm: 5.2, height_mm: 50, depth_mm: 40}
+  # --- Siemens -----------------------------------------------------------------------------------
+  - id: siemens-6es7214-1ag40-0xb0
+    manufacturer: Siemens
+    part_number: 6ES7214-1AG40-0XB0
+    description: "S7-1200 CPU 1214C DC/DC/DC"
+    kind: plc_cpu
+    width_mm: 110
+    height_mm: 100
+    depth_mm: 75
+    ports: [X1P1, X1P2]
+    io: {DI: 14, DO: 10, AI: 2}
+    io_terminals:
+      DI: [DIa.0, DIa.1, DIa.2, DIa.3, DIa.4, DIa.5, DIa.6, DIa.7, DIb.0, DIb.1, DIb.2, DIb.3, DIb.4, DIb.5]
+      DO: [DQa.0, DQa.1, DQa.2, DQa.3, DQa.4, DQa.5, DQa.6, DQa.7, DQb.0, DQb.1]
+      AI: [AI0, AI1]
+    terminals: ["L+", "M", "PE", "1L+", "1M", "3L+", "3M"]
+  - id: siemens-6es7214-1bg40-0xb0
+    manufacturer: Siemens
+    part_number: 6ES7214-1BG40-0XB0
+    description: "S7-1200 CPU 1214C AC/DC/Relay"
+    kind: plc_cpu
+    width_mm: 110
+    height_mm: 100
+    depth_mm: 75
+    ports: [X1P1, X1P2]
+    io: {DI: 14, DO: 10, AI: 2}
+    io_terminals:
+      DI: [DIa.0, DIa.1, DIa.2, DIa.3, DIa.4, DIa.5, DIa.6, DIa.7, DIb.0, DIb.1, DIb.2, DIb.3, DIb.4, DIb.5]
+      DO: [DQa.0, DQa.1, DQa.2, DQa.3, DQa.4, DQa.5, DQa.6, DQa.7, DQb.0, DQb.1]
+      AI: [AI0, AI1]
+    terminals: ["L1", "N", "PE", "1M", "1L", "2L"]
+  - id: siemens-6av2123-2db03-0ax0
+    manufacturer: Siemens
+    part_number: 6AV2123-2DB03-0AX0
+    description: "HMI KTP400 Basic 4\" PN"
+    kind: hmi
+    mount: door
+    width_mm: 140
+    height_mm: 116
+    depth_mm: 33
+    cutout_mm: [123, 99]
+    ports: [X1]
+    terminals: ["L+", "M"]
+  # --- Balluff -----------------------------------------------------------------------------------
+  - id: balluff-bni00hl
+    manufacturer: Balluff
+    part_number: BNI PG3-508-0C5-Z015
+    description: "IO-Link master PROFINET 8 puertos (BNI00HL)"
+    kind: iolink_master
+    mount: field
+    width_mm: 68
+    height_mm: 224
+    ports: [X01, X02, Port0, Port1, Port2, Port3, Port4, Port5, Port6, Port7]
+  - id: balluff-bni007z
+    manufacturer: Balluff
+    part_number: BNI IOL-302-002-K006
+    description: "IO-Link hub (BNI007Z)"
+    kind: iolink_hub
+    mount: field
+    width_mm: 50
+    height_mm: 115
+    ports: [IOL, Port0, Port1, Port2, Port3, Port4, Port5, Port6, Port7]
+  - id: balluff-bni0067
+    manufacturer: Balluff
+    part_number: BNI TCP-952-000-E029
+    description: "Switch Ethernet industrial 8 puertos (BNI0067)"
+    kind: network_switch
+    mount: field
+    width_mm: 50
+    height_mm: 139
+    ports: [P1, P2, P3, P4, P5, P6, P7, P8]
+  # --- Keyence -----------------------------------------------------------------------------------
+  - {id: keyence-dl-pn1, manufacturer: Keyence, part_number: DL-PN1, description: "Unidad de comunicación PROFINET (sensores GT2)", kind: fieldbus_coupler, ports: [PN1, PN2]}
+  - {id: keyence-gt2-500, manufacturer: Keyence, part_number: GT2-500, description: "Amplificador sensor de contacto GT2 (principal)", kind: measuring_sensor}
+  - {id: keyence-gt2-550, manufacturer: Keyence, part_number: GT2-550, description: "Amplificador sensor de contacto GT2 (expansión)", kind: measuring_sensor}
+  - {id: keyence-gl-t11r, manufacturer: Keyence, part_number: GL-T11R, description: "Cortina de luz de seguridad GL-R (unidad de conexión)", kind: safety_sensor, mount: field}
+  # --- SMC ----------------------------------------------------------------------------------------
+  - {id: smc-sy7320-5dz-02, manufacturer: SMC, part_number: SY7320-5DZ-02, description: "Electroválvula 5/2 doble solenoide 24 VDC", kind: solenoid_valve, mount: field, terminals: [A1, A2]}
+  - {id: smc-sy7420-5dz-02, manufacturer: SMC, part_number: SY7420-5DZ-02, description: "Electroválvula 5/3 24 VDC", kind: solenoid_valve, mount: field, terminals: [A1, A2]}
+  - {id: smc-ss5y7-20-10, manufacturer: SMC, part_number: SS5Y7-20-10, description: "Manifold SY7000 10 estaciones", kind: valve_manifold, mount: field}
+  # --- Enclosures ----------------------------------------------------------------------------------
+  - {id: schneider-nsycrn54250p, manufacturer: Schneider Electric, part_number: NSYCRN54250P, description: "Gabinete Spacial CRN 500x400x250 con placa", kind: generic, mount: field, width_mm: 400, height_mm: 500, depth_mm: 250, notes: "Placa de montaje NSYMR54 (aprox. 350 x 450 mm útiles); verificar en ficha técnica"}
+  - {id: generic-service-port-rj45, description: "Puerto de servicio RJ45 en puerta", kind: service_port, mount: door, width_mm: 69, height_mm: 69, cutout_mm: [22.5, 22.5]}

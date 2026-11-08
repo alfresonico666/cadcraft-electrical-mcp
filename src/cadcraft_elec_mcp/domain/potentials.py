@@ -20,7 +20,7 @@ def infer_potential_kind(name: str) -> PotentialKind:
         return PotentialKind.AC_NEUTRAL
     if upper in {"L-", "-24V", "GND"} or upper.startswith("0V") or re.fullmatch(r"M\d*", upper):
         return PotentialKind.DC_MINUS
-    if "V" in upper and any(ch.isdigit() for ch in upper) or upper in {"L+", "+24V"}:
+    if ("V" in upper and any(ch.isdigit() for ch in upper)) or upper in {"L+", "+24V"}:
         return PotentialKind.DC_PLUS
     return PotentialKind.AC_CONTROL
 

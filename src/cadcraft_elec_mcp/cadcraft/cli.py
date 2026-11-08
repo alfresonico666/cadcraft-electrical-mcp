@@ -32,8 +32,8 @@ class CliResult:
 
     def json_lines(self) -> list[Any]:
         out: list[Any] = []
-        for line in self.stdout.splitlines():
-            line = line.strip()
+        for raw in self.stdout.splitlines():
+            line = raw.strip()
             if line.startswith(("{", "[")):
                 try:
                     out.append(json.loads(line))

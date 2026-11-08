@@ -17,7 +17,7 @@ DXF_VERSION = "R2018"
 
 
 def new_document(profile: StandardProfile, font: str = "arial.ttf") -> Drawing:
-    doc = ezdxf.new(DXF_VERSION, setup=["linetypes"])
+    doc = ezdxf.new(DXF_VERSION, setup=["linetypes", "styles", "dimstyles"])
     doc.units = units.MM
     doc.header["$INSUNITS"] = units.MM
     doc.header["$MEASUREMENT"] = 1
@@ -34,7 +34,7 @@ def new_document(profile: StandardProfile, font: str = "arial.ttf") -> Drawing:
             layer.name,
             color=layer.color,
             linetype=linetype,
-            lineweight=int(round(layer.lineweight * 100)),
+            lineweight=round(layer.lineweight * 100),
         )
     return doc
 

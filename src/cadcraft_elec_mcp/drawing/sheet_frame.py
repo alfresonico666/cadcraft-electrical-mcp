@@ -20,14 +20,14 @@ ROW_LETTERS = [c for c in string.ascii_uppercase if c not in "IO"]
 
 @dataclass(frozen=True)
 class SheetGeometry:
-    index: int                  # 0-based position in the drawing
-    number: int                 # printed sheet number (1-based)
-    x: float                    # lower-left corner of the paper
+    index: int  # 0-based position in the drawing
+    number: int  # printed sheet number (1-based)
+    x: float  # lower-left corner of the paper
     y: float
     width: float
     height: float
-    inner: tuple[float, float, float, float]      # border rectangle
-    area: tuple[float, float, float, float]       # drawable area (inside zones, above title block)
+    inner: tuple[float, float, float, float]  # border rectangle
+    area: tuple[float, float, float, float]  # drawable area (inside zones, above title block)
     title_block: tuple[float, float, float, float]
     columns: int
     rows: int
@@ -64,8 +64,12 @@ def sheet_geometry(profile: StandardProfile, index: int, number: int) -> SheetGe
     fmt = profile.sheet
     x = index * (fmt.width + SHEET_GAP)
     y = 0.0
-    inner = (x + fmt.margin_left, y + fmt.margin_bottom, x + fmt.width - fmt.margin_right,
-             y + fmt.height - fmt.margin_top)
+    inner = (
+        x + fmt.margin_left,
+        y + fmt.margin_bottom,
+        x + fmt.width - fmt.margin_right,
+        y + fmt.height - fmt.margin_top,
+    )
     band = fmt.zone_band
     tb = (inner[0] + band, inner[1] + band, inner[2] - band, inner[1] + band + fmt.title_block_height)
     area = (inner[0] + band, tb[3], inner[2] - band, inner[3] - band)
@@ -90,8 +94,12 @@ def draw_frame(layout: BaseLayout, geo: SheetGeometry, profile: StandardProfile)
         add_line(layout, (x, y0), (x, y0 + band), layer="E-GRID")
     for c in range(geo.columns):
         cx = ax0 + (c + 0.5) * col_w
-        add_text(layout, str(c + 1), (cx, y1 - band / 2), height=text_h, layer="E-GRID", align="MIDDLE_CENTER")
-        add_text(layout, str(c + 1), (cx, y0 + band / 2), height=text_h, layer="E-GRID", align="MIDDLE_CENTER")
+        add_text(
+            layout, str(c + 1), (cx, y1 - band / 2), height=text_h, layer="E-GRID", align="MIDDLE_CENTER"
+        )
+        add_text(
+            layout, str(c + 1), (cx, y0 + band / 2), height=text_h, layer="E-GRID", align="MIDDLE_CENTER"
+        )
 
     # zone rows (letters in the left and right bands)
     row_h = (y1 - y0) / geo.rows

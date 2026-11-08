@@ -54,13 +54,18 @@ class SymbolLibrary:
         self._cache[key] = ref
         return ref
 
+    def label_x(self, symbol: SymbolDef, poles: int) -> float:
+        """X offset (block coordinates) where TAG/DESC texts start."""
+        return max(LABEL_X, symbol.width_for(poles, self.pole_pitch) / 2 + 1.5)
+
     def _add_attdefs(self, block, symbol: SymbolDef, poles: int) -> None:  # type: ignore[no-untyped-def]
         text = self.profile.text
-        half = symbol.width_for(poles, self.pole_pitch) / 2
-        x_label = max(LABEL_X, half + 1.5)
+        x_label = self.label_x(symbol, poles)
         mid = -symbol.length / 2
 
-        def attdef(tag: str, x: float, y: float, height: float, layer: str, align: TextEntityAlignment) -> None:
+        def attdef(
+            tag: str, x: float, y: float, height: float, layer: str, align: TextEntityAlignment
+        ) -> None:
             definition = block.add_attdef(
                 tag, insert=(x, y), height=height, dxfattribs={"layer": layer, "style": "ELEC"}
             )
@@ -71,5 +76,11 @@ class SymbolLibrary:
         if not symbol.spans_poles:
             attdef(ATTR_T1, -1.0, -0.6, text.terminal, "E-TERMINAL", TextEntityAlignment.TOP_RIGHT)
             if not symbol.terminal_end:
-                attdef(ATTR_T2, -1.0, -symbol.length + 0.6, text.terminal, "E-TERMINAL",
-                       TextEntityAlignment.BOTTOM_RIGHT)
+                attdef(
+                    ATTR_T2,
+                    -1.0,
+                    -symbol.length + 0.6,
+                    text.terminal,
+                    "E-TERMINAL",
+                    TextEntityAlignment.BOTTOM_RIGHT,
+                )

@@ -12,14 +12,14 @@ L = 10.0  # standard symbol length
 # --- contacts ----------------------------------------------------------------------------------------
 def _contact_no(p: Pen) -> None:
     p.stub_in(-3)
-    p.line(0, -7, -2.6, -2.4)          # moving contact (blade), open
+    p.line(0, -7, -2.6, -2.4)  # moving contact (blade), open
     p.stub_out(-7, L)
 
 
 def _contact_nc(p: Pen) -> None:
     p.stub_in(-3)
-    p.line(0, -3, -2.2, -3)            # fixed contact hook
-    p.line(0, -7, -2.9, -2.4)          # blade resting past the hook
+    p.line(0, -3, -2.2, -3)  # fixed contact hook
+    p.line(0, -7, -2.9, -2.4)  # blade resting past the hook
     p.stub_out(-7, L)
 
 
@@ -44,12 +44,12 @@ def contact_nc(p: Pen, poles: int, pitch: float) -> None:
 
 def power_contact(p: Pen, poles: int, pitch: float) -> None:
     _contact_no(p)
-    p.arc(0, -3.0, 0.9, 180, 360)      # contactor function (semicircle) at the fixed contact
+    p.arc(0, -3.0, 0.9, 180, 360)  # contactor function (semicircle) at the fixed contact
 
 
 def disconnector(p: Pen, poles: int, pitch: float) -> None:
     _contact_no(p)
-    p.line(-1.0, -3.0, 1.0, -3.0)      # isolating function bar
+    p.line(-1.0, -3.0, 1.0, -3.0)  # isolating function bar
     x = _actuator(p)
     if x is None:
         return
@@ -58,12 +58,12 @@ def disconnector(p: Pen, poles: int, pitch: float) -> None:
 
 def mcb(p: Pen, poles: int, pitch: float) -> None:
     _contact_no(p)
-    p.line(-0.8, -2.2, 0.8, -3.8)      # circuit-breaker function (X)
+    p.line(-0.8, -2.2, 0.8, -3.8)  # circuit-breaker function (X)
     p.line(-0.8, -3.8, 0.8, -2.2)
     x = _actuator(p)
     if x is None:
         return
-    p.rect(x - 2.0, -6.0, x, -3.6)     # thermal-magnetic release
+    p.rect(x - 2.0, -6.0, x, -3.6)  # thermal-magnetic release
 
 
 def mpcb(p: Pen, poles: int, pitch: float) -> None:
@@ -130,7 +130,7 @@ def coil(p: Pen, poles: int, pitch: float) -> None:
 
 def coil_valve(p: Pen, poles: int, pitch: float) -> None:
     coil(p, poles, pitch)
-    p.line(-3.0, -7.0, 3.0, -3.0)      # electromechanical actuator for valves
+    p.line(-3.0, -7.0, 3.0, -3.0)  # electromechanical actuator for valves
     if p.with_actuator:
         p.poly([(-5.5, -3.8), (-4.0, -3.8), (-4.0, -6.2), (-5.5, -6.2)])
 
@@ -230,11 +230,27 @@ SYMBOLS: dict[str, SymbolDef] = {
         SymbolDef("terminal", "Borne", 5.0, terminal, half_width=1.0),
         SymbolDef("box", "Dispositivo genérico", L, box, half_width=4.0),
         SymbolDef("pe_ground", "Tierra de protección", 5.0, pe_ground, terminal_end=True),
-        SymbolDef("motor", "Motor", 15.0, motor, "power", spans_poles=True, terminal_end=True,
-                  half_width=6.0),
-        SymbolDef("psu", "Fuente de alimentación AC/DC", 14.0, psu, "power", spans_poles=True,
-                  terminal_end=True, half_width=6.0),
-        SymbolDef("device_box", "Equipo (caja)", 12.0, device_box, spans_poles=True, terminal_end=True,
-                  half_width=5.0),
+        SymbolDef(
+            "motor", "Motor", 15.0, motor, "power", spans_poles=True, terminal_end=True, half_width=6.0
+        ),
+        SymbolDef(
+            "psu",
+            "Fuente de alimentación AC/DC",
+            14.0,
+            psu,
+            "power",
+            spans_poles=True,
+            terminal_end=True,
+            half_width=6.0,
+        ),
+        SymbolDef(
+            "device_box",
+            "Equipo (caja)",
+            12.0,
+            device_box,
+            spans_poles=True,
+            terminal_end=True,
+            half_width=5.0,
+        ),
     ]
 }
