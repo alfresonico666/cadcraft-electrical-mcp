@@ -1,0 +1,47 @@
+# IEC profile with legacy single-letter classes (IEC 60750 / DIN 40719 / IEC 81346-2:2009 style),
+# the codes most shops and QElectroTech libraries still use (-K, -F, -Q, -S, -H, -X ...).
+extends: iec
+name: iec_legacy
+title: "IEC (códigos de una letra, estilo IEC 60750)"
+tag:
+  prefix: "-"
+  scheme: "Legacy single-letter (IEC 60750)"
+  codes:
+    contactor: K
+    relay: K
+    safety_relay: K
+    timer_relay: K
+    mcb: F
+    mpcb: Q
+    fuse: F
+    rcd: F
+    main_switch: Q
+    overload: F
+    psu: G
+    transformer: T
+    plc_cpu: A
+    plc_module: A
+    hmi: A
+    network_switch: A
+    iolink_master: A
+    iolink_hub: A
+    fieldbus_coupler: A
+    sensor: B
+    pressure_sensor: B
+    measuring_sensor: B
+    safety_sensor: B
+    solenoid_valve: Y
+    valve_manifold: Y
+    motor: M
+    vfd: T
+    pushbutton: S
+    estop: S
+    selector: S
+    pilot_lamp: H
+    terminal_strip: X
+    connector: X
+    service_port: X
+    fan: E
+    cable: W
+    pc: A
+    generic: A

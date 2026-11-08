@@ -1,0 +1,33 @@
+"""Pure domain model: no file system, no CAD, no MCP."""
+
+from .designation import Designation, natural_key, next_tag, split_terminal_ref
+from .model import (
+    CabinetSpec,
+    CircuitPath,
+    Device,
+    DeviceKind,
+    IoKind,
+    Mount,
+    NetworkLink,
+    PathElement,
+    Placement,
+    PlcIoChannel,
+    Potential,
+    PotentialKind,
+    Project,
+    Protocol,
+    RailSpec,
+    SheetKind,
+    SheetSpec,
+    TerminalSpec,
+    TerminalStrip,
+    TitleBlockInfo,
+)
+from .numbering import NumberingStrategy, WireNumberer
+
+__all__ = [
+    "CabinetSpec", "CircuitPath", "Designation", "Device", "DeviceKind", "IoKind", "Mount", "NetworkLink",
+    "NumberingStrategy", "PathElement", "Placement", "PlcIoChannel", "Potential", "PotentialKind", "Project",
+    "Protocol", "RailSpec", "SheetKind", "SheetSpec", "TerminalSpec", "TerminalStrip", "TitleBlockInfo",
+    "WireNumberer", "natural_key", "next_tag", "split_terminal_ref",
+]

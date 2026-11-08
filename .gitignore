@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.spec.bak
+
+# Generated outputs / local data (never publish vendor models or customer drawings)
+output/
+workspace/
+*.dwg
+*.stp
+*.step
+*.bak
+*.FCBak
+Modelos/
+local/
+config.toml
+!examples/config.example.toml

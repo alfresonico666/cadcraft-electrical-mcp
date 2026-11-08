@@ -1,0 +1,132 @@
+# IEC profile: IEC 81346-1/-2:2019 designations, IEC 60617 symbols, IEC 61082-1 sheets,
+# IEC 60204-1 §13.2.4 conductor colours, ISO 5457 / ISO 7200 sheet & title block, ISO 3098 text.
+name: iec
+title: "IEC (81346-2:2019 · 60617 · 61082-1 · 60204-1)"
+symbol_style: iec
+orientation: vertical          # current paths run top -> bottom, columns left -> right
+numbering: potential           # potential | sheet_column | line_reference
+show_full_designation: false   # true -> =A1+CAB1-KF1 on symbols
+
+tag:
+  prefix: "-"
+  scheme: "IEC 81346-2:2019 (two-letter classes)"
+  codes:
+    contactor: QA
+    relay: KF
+    safety_relay: KF
+    timer_relay: KF
+    mcb: FC
+    mpcb: QA
+    fuse: FC
+    rcd: FB
+    main_switch: QB
+    overload: FC
+    psu: TB
+    transformer: TA
+    plc_cpu: KF
+    plc_module: KF
+    hmi: PF
+    network_switch: KF
+    iolink_master: KF
+    iolink_hub: KF
+    fieldbus_coupler: KF
+    sensor: BG
+    pressure_sensor: BP
+    measuring_sensor: BG
+    safety_sensor: BG
+    solenoid_valve: MB
+    valve_manifold: MB
+    motor: MA
+    vfd: TA
+    pushbutton: SF
+    estop: SF
+    selector: SF
+    pilot_lamp: PF
+    terminal_strip: XD
+    connector: XD
+    service_port: XF
+    fan: EC
+    cable: WD
+    pc: KF
+    generic: A
+
+sheet:
+  paper: A3
+  width: 420
+  height: 297
+  margin_left: 20       # ISO 5457 filing margin
+  margin_right: 10
+  margin_top: 10
+  margin_bottom: 10
+  zone_band: 5
+  columns: 10           # current-path columns (IEC 61082-1 path referencing)
+  rows: 6               # ISO 5457 zones A..F
+  title_block_height: 30
+
+text:                   # ISO 3098 heights (mm)
+  general: 2.5
+  terminal: 2.5
+  wire_number: 2.5
+  designation: 3.5
+  heading: 5.0
+  title: 7.0
+  minimum: 2.5
+
+lineweights:            # mm, ISO 128 sqrt(2) series
+  thin: 0.18
+  symbol: 0.25
+  wire: 0.35
+  frame: 0.70
+
+# Conductor colours per circuit class (IEC 60204-1 §13.2.4 + IEC 60445).
+# aci = AutoCAD colour index used for the drawing layer; code = marking used in lists.
+wire_colors:
+  ac_phase:   {code: BK, name: "Negro (potencia AC/DC)", aci: 7}
+  ac_neutral: {code: BU, name: "Azul claro (neutro)", aci: 4}
+  pe:         {code: GNYE, name: "Verde-amarillo (PE)", aci: 3}
+  ac_control: {code: RD, name: "Rojo (control AC)", aci: 1}
+  dc_plus:    {code: DBU, name: "Azul oscuro (control DC)", aci: 5}
+  dc_minus:   {code: DBU, name: "Azul oscuro (control DC)", aci: 5}
+  external:   {code: OG, name: "Naranja (alimentación externa)", aci: 30}
+
+cross_sections_mm2:
+  ac_phase: 2.5
+  ac_neutral: 2.5
+  pe: 2.5
+  ac_control: 1.0
+  dc_plus: 0.75
+  dc_minus: 0.75
+  external: 1.0
+
+layers:
+  - {name: E-FRAME,      color: 7,  linetype: Continuous, lineweight: 0.70}
+  - {name: E-GRID,       color: 8,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-TITLE,      color: 7,  linetype: Continuous, lineweight: 0.25}
+  - {name: E-SYMBOL,     color: 7,  linetype: Continuous, lineweight: 0.25}
+  - {name: E-DESIG,      color: 7,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-TERMINAL,   color: 8,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-TEXT,       color: 7,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-XREF,       color: 6,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-BOX,        color: 8,  linetype: DASHDOT,    lineweight: 0.25}
+  - {name: E-LINK,       color: 8,  linetype: DASHED,     lineweight: 0.18}
+  - {name: E-WIRENO,     color: 7,  linetype: Continuous, lineweight: 0.18}
+  - {name: E-NET,        color: 3,  linetype: Continuous, lineweight: 0.35}
+  - {name: E-NET-IOLINK, color: 2,  linetype: Continuous, lineweight: 0.35}
+  - {name: L-ENCLOSURE,  color: 8,  linetype: Continuous, lineweight: 0.50}
+  - {name: L-PLATE,      color: 7,  linetype: Continuous, lineweight: 0.50}
+  - {name: L-RAIL,       color: 9,  linetype: Continuous, lineweight: 0.25}
+  - {name: L-DUCT,       color: 8,  linetype: Continuous, lineweight: 0.25}
+  - {name: L-DEVICE,     color: 7,  linetype: Continuous, lineweight: 0.25}
+  - {name: L-HOLES,      color: 1,  linetype: Continuous, lineweight: 0.25}
+  - {name: L-DIM,        color: 4,  linetype: Continuous, lineweight: 0.18}
+  - {name: L-TEXT,       color: 7,  linetype: Continuous, lineweight: 0.18}
+
+terminal_marking:       # informative; used by auto terminal assignment
+  coil: [A1, A2]
+  power_poles: [["1", "2"], ["3", "4"], ["5", "6"], ["7", "8"]]
+  aux_no: ["x3", "x4"]   # x = contact sequence number (13-14, 23-24 ...)
+  aux_nc: ["x1", "x2"]   # (11-12, 21-22 ...)
+  overload_nc: ["95", "96"]
+  overload_no: ["97", "98"]
+  motor: [U1, V1, W1]
+  dc_supply: ["L+", "M"]
