@@ -6,6 +6,7 @@ the port name at each end and the cable designation in the middle.
 
 from __future__ import annotations
 
+import textwrap
 from collections import defaultdict, deque
 from dataclasses import dataclass
 
@@ -111,11 +112,13 @@ def generate_network(ctx: BuildContext, spec: SheetSpec) -> list[int]:
             layer="E-DESIG",
             align="TOP_LEFT",
         )
-        lines = [device.description, device.part_number, device.data.get("ip", "")]
-        for j, line in enumerate(line for line in lines if line):
+        chars = max(int((width - 3.0) / (text.general * 0.7)), 8)
+        lines = textwrap.wrap(device.description, chars, break_long_words=False)[:2]
+        lines += [x for x in (device.part_number, device.data.get("ip", "")) if x]
+        for j, line in enumerate(lines[:3]):
             add_text(
                 msp,
-                line[: int((width - 3.0) / (text.general * 0.72))],
+                line[:chars],
                 (left + 1.5, node.y - 6.5 - j * 3.4),
                 height=text.general,
                 layer="E-TEXT",
@@ -152,28 +155,20 @@ def generate_network(ctx: BuildContext, spec: SheetSpec) -> list[int]:
                     layer="E-TERMINAL",
                     align="TOP_LEFT",
                 )
-            if child_port:
+            # child port + cable on one line just above the child box (the drop is too short for text)
+            label = child_port
+            if len(points) == 4:
+                label += "  " + PROTOCOL_LABEL[link.protocol] + (f" {link.cable}" if link.cable else "")
+                if link.length_m:
+                    label += f" {link.length_m:g} m"
+            if label.strip():
                 add_text(
                     msp,
-                    child_port,
+                    label.strip(),
                     (end[0] + 0.8, end[1] + 0.8),
                     height=text.terminal,
                     layer="E-TERMINAL",
                     align="BOTTOM_LEFT",
-                )
-            if len(points) == 4:
-                label = PROTOCOL_LABEL[link.protocol] + (f" {link.cable}" if link.cable else "")
-                if link.length_m:
-                    label += f" {link.length_m:g} m"
-                # written along the child's vertical drop: never collides with sibling links
-                add_text(
-                    msp,
-                    label,
-                    (end[0] - 0.8, points[2][1] - 1.0),
-                    height=text.terminal,
-                    layer="E-TEXT",
-                    align="BOTTOM_RIGHT",
-                    rotation=90,
                 )
     if spec.note:
         add_text(msp, spec.note, (x0 + 1.0, y0 + 2.0), height=text.general, layer="E-TEXT")

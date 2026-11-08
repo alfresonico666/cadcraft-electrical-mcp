@@ -2,6 +2,12 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [0.1.1] - 2026-11-08
+
+### Corregido
+- Hoja de red: puerto y cable en una línea sobre cada equipo (antes se encimaban), descripciones en dos líneas.
+- Instalador compatible con Windows PowerShell 5.1 (errores de stderr nativo, acentos con BOM).
+
 ## [0.1.0] - 2026-11-08
 
 ### Agregado
