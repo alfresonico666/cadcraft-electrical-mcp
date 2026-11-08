@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Genera dist\cadcraft-elec-mcp.exe (un solo archivo, no requiere Python en la PC destino).
 #>

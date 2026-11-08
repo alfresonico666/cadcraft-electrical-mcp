@@ -3,3 +3,4 @@
 *.pdf binary
 *.dxf text eol=crlf
 *.xlsx binary
+*.ps1 text eol=crlf

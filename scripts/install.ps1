@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Instala cadcraft-elec-mcp para el usuario actual y lo registra en Claude Code y Claude Desktop.
 
@@ -22,6 +22,22 @@ $mcpWheel = "https://files.pythonhosted.org/packages/20/d7/4a2878f128df729db3ca0
 
 function Write-Step($text) { Write-Host "==> $text" -ForegroundColor Cyan }
 
+# Windows PowerShell 5.1 turns any stderr line of a native program into a terminating error when
+# ErrorActionPreference is Stop; run native tools through this helper and check the exit code instead.
+function Invoke-Native {
+    param([string]$FilePath, [string[]]$Arguments, [switch]$AllowFailure)
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $FilePath @Arguments 2>&1 | ForEach-Object { Write-Host "    $_" }
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    if ($code -ne 0 -and -not $AllowFailure) { throw "$FilePath $($Arguments -join ' ') failed ($code)" }
+    return $code
+}
+
 # --- 1. Servidor ------------------------------------------------------------------------------------
 if ($Exe) {
     if (-not (Test-Path $Exe)) { throw "No existe $Exe" }
@@ -30,24 +46,23 @@ if ($Exe) {
     Write-Step "Instalando con Python en $InstallDir"
     $python = Get-Command python -ErrorAction SilentlyContinue
     if (-not $python) { throw "Python 3.11+ no encontrado. Instálalo o usa -Exe con el ejecutable de Releases." }
-    & python -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"
-    if ($LASTEXITCODE -ne 0) { throw "Se requiere Python 3.11 o superior." }
+    $ok = Invoke-Native python @("-c", "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)") -AllowFailure
+    if ($ok -ne 0) { throw "Se requiere Python 3.11 o superior." }
     $venv = Join-Path $InstallDir "venv"
-    if (-not (Test-Path $venv)) { & python -m venv $venv }
+    if (-not (Test-Path $venv)) { Invoke-Native python @("-m", "venv", $venv) | Out-Null }
     $venvPython = Join-Path $venv "Scripts\python.exe"
-    & $venvPython -m pip install --quiet --upgrade pip
-    & $venvPython -m pip install --quiet $repo
-    if ($LASTEXITCODE -ne 0) {
+    Invoke-Native $venvPython @("-m", "pip", "install", "--quiet", "--upgrade", "pip") -AllowFailure | Out-Null
+    $code = Invoke-Native $venvPython @("-m", "pip", "install", "--quiet", $repo) -AllowFailure
+    if ($code -ne 0) {
         Write-Warning "pip falló (algunas redes corrompen el índice de 'mcp'); instalando la rueda directa."
-        & $venvPython -m pip install --quiet $mcpWheel
-        & $venvPython -m pip install --quiet $repo
-        if ($LASTEXITCODE -ne 0) { throw "No se pudo instalar el paquete." }
+        Invoke-Native $venvPython @("-m", "pip", "install", "--quiet", $mcpWheel) | Out-Null
+        Invoke-Native $venvPython @("-m", "pip", "install", "--quiet", $repo) | Out-Null
     }
     $serverExe = Join-Path $venv "Scripts\cadcraft-elec-mcp.exe"
 }
 
 Write-Step "Diagnóstico"
-& $serverExe doctor
+Invoke-Native $serverExe @("doctor") | Out-Null
 
 # --- 2. CADCraft ------------------------------------------------------------------------------------
 $cadcraftCli = $null
@@ -62,11 +77,12 @@ if (-not $cadcraftCli) { Write-Warning "CADCraft no encontrado: instálalo desde
 if (-not $SkipClaudeCode) {
     if (Get-Command claude -ErrorAction SilentlyContinue) {
         Write-Step "Registrando en Claude Code (scope user)"
-        & claude mcp remove --scope user cadcraft-elec 2>$null | Out-Null
-        & claude mcp add --scope user cadcraft-elec -- $serverExe
+        Invoke-Native claude @("mcp", "remove", "--scope", "user", "cadcraft-elec") -AllowFailure | Out-Null
+        Invoke-Native claude @("mcp", "add", "--scope", "user", "cadcraft-elec", "--", $serverExe) | Out-Null
         if ($WithCadcraftMcp -and $cadcraftCli) {
-            & claude mcp remove --scope user cadcraft 2>$null | Out-Null
-            & claude mcp add --scope user cadcraft -- $cadcraftCli mcp --connect "127.0.0.1:$ControlPort" --lazy
+            Invoke-Native claude @("mcp", "remove", "--scope", "user", "cadcraft") -AllowFailure | Out-Null
+            Invoke-Native claude @("mcp", "add", "--scope", "user", "cadcraft", "--", $cadcraftCli, "mcp",
+                "--connect", "127.0.0.1:$ControlPort", "--lazy") | Out-Null
         }
     } else {
         Write-Warning "No se encontró 'claude' (Claude Code); omitiendo ese registro."
