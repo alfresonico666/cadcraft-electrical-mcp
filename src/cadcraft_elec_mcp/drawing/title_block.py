@@ -162,3 +162,12 @@ class TitleBlockBuilder:
         name = self.ensure(x1 - x0, y1 - y0)
         ref = layout.add_blockref(name, (x0, y0), dxfattribs={"layer": "E-TITLE"})
         ref.add_auto_attribs({k.upper(): v for k, v in values.items() if k in FIELDS})
+        if self.template is None:
+            widths = {field.upper(): (fx1 - fx0) * (x1 - x0) for _, field, fx0, _, fx1, _, _ in _CELLS}
+            for attrib in ref.attribs:
+                cell = widths.get(attrib.dxf.tag)
+                text_w = len(attrib.dxf.text) * attrib.dxf.height * 0.68
+                if cell and text_w > cell - 3.0:  # shrink the text height (viewers ignore width factors)
+                    attrib.dxf.height = max(
+                        attrib.dxf.height * (cell - 3.0) / text_w, self.profile.text.minimum
+                    )

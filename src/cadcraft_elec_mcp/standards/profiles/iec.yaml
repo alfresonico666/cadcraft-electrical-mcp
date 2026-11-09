@@ -19,6 +19,7 @@ tag:
     mpcb: QA
     fuse: FC
     rcd: FB
+    surge_protector: FA
     main_switch: QB
     overload: FC
     psu: TB

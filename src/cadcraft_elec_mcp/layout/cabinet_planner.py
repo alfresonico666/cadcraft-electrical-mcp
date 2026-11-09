@@ -161,7 +161,10 @@ def plan_backplate(
             )
             rows.extend(_greedy_rows(leftovers, usable.w, spec.device_gap))
     else:
-        rows = _greedy_rows(flow, usable.w, spec.device_gap)
+        # keep the target spare length on every rail when the rows still fit vertically
+        reserved = _greedy_rows(flow, usable.w * (1.0 - spec.spare_ratio), spec.device_gap)
+        full = _greedy_rows(flow, usable.w, spec.device_gap)
+        rows = reserved if _stack_height(reserved, spec) <= spec.plate_height - 2 * m + 0.01 else full
 
     # vertical stacking from the top
     y_top = spec.plate_height - m
@@ -218,6 +221,12 @@ def plan_backplate(
                 f"(target {100 * spec.spare_ratio:.0f}%)."
             )
     return plan
+
+
+def _stack_height(rows: list[list[DeviceBox]], spec: CabinetSpec) -> float:
+    """Height needed by the top duct plus every rail row (clearances + duct below each row)."""
+    c, dw = spec.duct_clearance, spec.duct_width
+    return dw + sum(c + max([b.height for b in row] + [DIN_RAIL_HEIGHT]) + c + dw for row in rows)
 
 
 def _greedy_rows(boxes: list[DeviceBox], width: float, gap: float) -> list[list[DeviceBox]]:

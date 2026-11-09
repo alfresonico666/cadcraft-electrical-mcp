@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cadcraft-elec-mcp"
-version = "0.1.1"
+version = "0.2.0"
 description = "MCP server that generates industrial electrical drawings (IEC / NFPA schematics, cabinet layouts, networks, terminal plans) on top of CADCraft."
 readme = "README.md"
 license = "Apache-2.0"

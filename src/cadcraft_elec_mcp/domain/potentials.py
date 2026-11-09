@@ -6,13 +6,13 @@ import re
 
 from .model import PotentialKind, Project
 
-_ORDER = ["L1", "L2", "L3", "N", "PE"]
+_ORDER = ["L", "L1", "L2", "L3", "N", "N1", "PE"]
 
 
 def infer_potential_kind(name: str) -> PotentialKind:
     """Best guess when a rail name is not declared in the project."""
     upper = name.upper().replace(" ", "")
-    if re.match(r"L[123](?![+\-\d])", upper):
+    if upper == "L" or re.match(r"L[123](?![+\-\d])", upper):
         return PotentialKind.AC_PHASE
     if upper.startswith("PE") or upper in {"GND_PE", "GNYE"}:
         return PotentialKind.PE

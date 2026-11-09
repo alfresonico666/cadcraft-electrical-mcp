@@ -21,6 +21,7 @@
 | `mpcb` | `-QA` | `-Q` | `MPCB` |
 | `fuse` | `-FC` | `-F` | `FU` |
 | `rcd` | `-FB` | `-F` | `GFCI` |
+| `surge_protector` | `-FA` | `-F` | `SPD` |
 | `main_switch` | `-QB` | `-Q` | `DISC` |
 | `overload` | `-FC` | `-F` | `OL` |
 | `psu` | `-TB` | `-G` | `PS` |

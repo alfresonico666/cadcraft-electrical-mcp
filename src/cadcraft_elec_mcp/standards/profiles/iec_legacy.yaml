@@ -15,6 +15,7 @@ tag:
     mpcb: Q
     fuse: F
     rcd: F
+    surge_protector: F
     main_switch: Q
     overload: F
     psu: G

@@ -119,3 +119,55 @@ def test_terminal_strip_device_kind(session: Session, project_tags: dict[str, st
     with pytest.raises(ProjectError):
         io_terminals.add_terminals(session, strips[0].tag, "", numbers=["1"])
     devices.add_devices(session, [DeviceInput(kind=DeviceKind.TERMINAL_STRIP, description="Spare")])
+
+
+def test_feeds_spd_and_rcd(session: Session) -> None:
+    """Single-phase incoming supply: disconnector, SPD, RCD, MCB feeding L1/N1 (continuation arrows)."""
+    from cadcraft_elec_mcp.application import sheets
+    from cadcraft_elec_mcp.domain.model import CircuitPath, PathElement, Potential, PotentialKind, SheetKind
+
+    projects.create_project(session, session_info("T002"), "iec", None)
+    tags = [
+        d["tag"]
+        for d in devices.add_devices(
+            session,
+            [
+                DeviceInput(kind=DeviceKind.MAIN_SWITCH),
+                DeviceInput(kind=DeviceKind.SURGE_PROTECTOR),
+                DeviceInput(kind=DeviceKind.RCD),
+                DeviceInput(catalog_id="generic-mcb-2p"),
+                DeviceInput(kind=DeviceKind.PILOT_LAMP),
+            ],
+        )
+    ]
+    assert tags[1] == "-FA1" and tags[2] == "-FB1"
+    projects.set_potential(session, Potential(name="L1", kind=PotentialKind.AC_PHASE, source="-FC1:2"))
+    sheets.add_sheet(
+        session,
+        SheetKind.POWER,
+        "AC",
+        paths=[
+            CircuitPath(
+                label="In",
+                supply=["L", "N"],
+                elements=[PathElement(device=t) for t in tags[:4]],
+                feeds=["L1", "N1"],
+            ),
+            CircuitPath(
+                label="Lamp", supply=["L1"], return_rail="N1", elements=[PathElement(device=tags[4])]
+            ),
+        ],
+    )
+    compiled = compile_project(session)
+    numbers = {w.number for w in compiled.ctx.wires}
+    assert {"L", "N", "L1", "N1"} <= numbers
+    assert any(w.to_ref == "-FB1:3" for w in compiled.ctx.wires)  # RCD pole 2 terminals 3-4
+    blocks = {b.name for b in compiled.ctx.doc.blocks}
+    assert {"ELEC_IEC_SURGE", "ELEC_IEC_RCD"} <= blocks
+    assert run_validation(session, compiled).ok
+
+
+def session_info(code: str):  # type: ignore[no-untyped-def]
+    from cadcraft_elec_mcp.domain.model import TitleBlockInfo
+
+    return TitleBlockInfo(project_code=code)

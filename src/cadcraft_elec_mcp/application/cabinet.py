@@ -25,6 +25,7 @@ TERMINAL_HEIGHT = 50.0
 _NOT_IN_CABINET = {DeviceKind.CABLE, DeviceKind.MOTOR}
 _ORDER = [
     DeviceKind.MAIN_SWITCH,
+    DeviceKind.SURGE_PROTECTOR,
     DeviceKind.RCD,
     DeviceKind.MCB,
     DeviceKind.MPCB,

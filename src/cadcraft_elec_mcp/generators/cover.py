@@ -58,7 +58,7 @@ def _sheet_index(ctx: BuildContext, geo: SheetGeometry) -> None:
     x0, _, x1, y1 = geo.area
     left = (x0 + x1) / 2 + 20
     right = x1 - 10
-    y = y1 - 55
+    y = y1 - 62
     add_text(msp, "Índice / Index", (left, y + 6), height=text.heading, layer="E-TEXT")
     add_line(msp, (left, y + 4), (right, y + 4), layer="E-TITLE")
     step = text.general * 2.0

@@ -20,6 +20,8 @@ _CONTROL_DEFAULTS: dict[DeviceKind, str] = {
     DeviceKind.MPCB: "mpcb",
     DeviceKind.FUSE: "fuse",
     DeviceKind.MAIN_SWITCH: "disconnector",
+    DeviceKind.RCD: "rcd",
+    DeviceKind.SURGE_PROTECTOR: "surge",
     DeviceKind.OVERLOAD: "contact_nc",
     DeviceKind.PUSHBUTTON: "pushbutton_no",
     DeviceKind.ESTOP: "estop",
@@ -104,7 +106,7 @@ class TerminalAllocator:
             return [[n, ""] for n in names]
         if symbol_id in {"contact_no", "contact_nc"} and kind in {DeviceKind.OVERLOAD, DeviceKind.MPCB}:
             return [["95", "96"]] if symbol_id == "contact_nc" else [["97", "98"]]
-        if symbol_id in {"power_contact", "mcb", "mpcb", "fuse", "disconnector", "overload"}:
+        if symbol_id in {"power_contact", "mcb", "mpcb", "fuse", "disconnector", "overload", "rcd", "surge"}:
             return [[str(2 * i + 1), str(2 * i + 2)] for i in range(poles)]
         if symbol_id in {
             "contact_no",

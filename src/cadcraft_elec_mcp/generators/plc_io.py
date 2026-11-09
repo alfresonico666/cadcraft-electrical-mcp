@@ -15,7 +15,7 @@ from ..errors import GenerationError
 from .context import BuildContext
 from .ladder import LadderPath, LadderSheet, paginate
 
-BOX = 24.0  # depth of the module box along the current path
+BOX = 30.0  # depth of the module box along the current path (terminal, address, 2-line comment, title)
 INPUTS = (IoKind.DI, IoKind.AI)
 OUTPUTS = (IoKind.DO, IoKind.AQ)
 

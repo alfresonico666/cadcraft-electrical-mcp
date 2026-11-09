@@ -46,6 +46,7 @@ class LadderPath:
     start_ref: str | None = None  # path starts at an anchor instead of a rail
     end_ref: str | None = None  # path ends at an anchor instead of a rail
     circuit_kind: PotentialKind | None = None
+    feeds: list[str] | None = None  # potentials fed after the last element (continuation arrows)
     poles: int = field(init=False)
 
     def __post_init__(self) -> None:
@@ -205,9 +206,24 @@ class LadderSheet:
         layer = self.ctx.profile.wire_layer(kind)
         lo = band.across_min + (0.0 if self.vertical else 1.0)
         hi = band.across_max
+        declared = self.ctx.project.potential(rail)
+        info = ""
+        if declared is not None and (declared.voltage or declared.source):
+            info = "  ".join(
+                x for x in (declared.voltage, f"desde {declared.source}" if declared.source else "") if x
+            )
         if self.vertical:
             add_line(self.ctx.msp, (lo, -along), (hi, -along), layer=layer)
             add_text(self.ctx.msp, rail, (lo + 0.5, -along + 0.6), height=h, layer="E-TEXT")
+            if info:  # right end: the far columns are the least used ones
+                add_text(
+                    self.ctx.msp,
+                    f"{rail}: {info}",
+                    (hi - 0.5, -along + 0.6),
+                    height=h * 0.8,
+                    layer="E-TEXT",
+                    align="BOTTOM_RIGHT",
+                )
         else:
             add_line(self.ctx.msp, (along, lo), (along, hi), layer=layer)
             add_text(self.ctx.msp, rail, (along, hi + 0.6), height=h, layer="E-TEXT", align="BOTTOM_CENTER")
@@ -274,6 +290,30 @@ class LadderSheet:
         elif path.end_ref is not None:
             target = self.path_limit(band) + 4.0 + 2.0
             self._wire(pos, offsets[0], cursors[0], target, path.end_ref, path, column)
+        elif path.feeds:
+            for p, potential in enumerate(path.feeds):
+                self._feed_arrow(pos, offsets[p], cursors[p], potential, path, column, p)
+
+    def _feed_arrow(
+        self,
+        pos: float,
+        offset: float,
+        cursor: _Cursor,
+        potential: str,
+        path: LadderPath,
+        column: int,
+        pole: int,
+    ) -> None:
+        """Short conductor + arrow + potential name: the path feeds <potential> (IEC 61082 continuation)."""
+        end = cursor.along + 8.0
+        self._wire(pos, offset, cursor, end, potential, path, column, pole=pole, to_rail=potential)
+        tip = end + 2.4
+        arrow = [self.pt(pos, end, offset - 1.2), self.pt(pos, end, offset + 1.2), self.pt(pos, tip, offset)]
+        layer = self.ctx.profile.wire_layer(potential_kind(self.ctx.project, potential))
+        self.ctx.msp.add_lwpolyline(arrow, close=True, dxfattribs={"layer": layer})
+        x, y = self.pt(pos, tip + 0.8, offset)
+        align = "TOP_CENTER" if self.vertical else "MIDDLE_LEFT"
+        add_text(self.ctx.msp, potential, (x, y), height=self.text.general, layer="E-TEXT", align=align)
 
     def _symbol_id(self, element: PathElement) -> str:
         if element.symbol:
@@ -351,7 +391,8 @@ class LadderSheet:
         p2 = self.pt(pos, target_along, offset)
         add_line(self.ctx.msp, p1, p2, layer=layer)
         number = self.ctx.numberer.number(sheet=self.geo.number, column=column, potential=rail_name)
-        if abs(target_along - cursor.along) >= 6.0:
+        text_len = len(number) * self.text.wire_number * 0.62
+        if abs(target_along - cursor.along) >= max(6.0, text_len + 2.0):
             self._wire_number(p1, p2, number)
         color = self.ctx.profile.wire_color(kind)
         self.ctx.add_wire(
@@ -491,7 +532,7 @@ class LadderSheet:
                 if symbol.spans_poles
                 else -offsets[0] + symbol.half_width
             )
-            self._draw_pe(pos, along, symbol.length, half, device.tag, column)
+            self._draw_pe(pos, along, symbol.length, half, device.tag, column, below=symbol.spans_poles)
         return symbol.terminal_end
 
     def _label_point(self, pos: float, along: float, length: float, half: float) -> tuple[float, float]:
@@ -578,11 +619,25 @@ class LadderSheet:
             XrefItem(device, symbol_id, [p for p in pairs if p], self.slot_ref(slot), anchor, self.vertical)
         )
 
-    def _draw_pe(self, pos: float, along: float, length: float, half: float, tag: str, column: int) -> None:
-        mid = along + length / 2
-        side = -1.0 if self.vertical else 1.0  # away from the designation text
-        start = self.pt(pos, mid, side * half)
-        end = self.pt(pos, mid, side * (half + 4.0))
+    def _draw_pe(
+        self,
+        pos: float,
+        along: float,
+        length: float,
+        half: float,
+        tag: str,
+        column: int,
+        *,
+        below: bool = False,
+    ) -> None:
+        if below:  # box-like devices: PE leaves the bottom edge, never invades the neighbour column
+            start = self.pt(pos, along + length, 0.0)
+            end = self.pt(pos, along + length + 4.0, 0.0)
+        else:
+            mid = along + length / 2
+            side = -1.0 if self.vertical else 1.0  # away from the designation text
+            start = self.pt(pos, mid, side * half)
+            end = self.pt(pos, mid, side * (half + 4.0))
         layer = self.ctx.profile.wire_layer(PotentialKind.PE)
         add_line(self.ctx.msp, start, end, layer=layer)
         ground = self.ctx.symbols.ensure("pe_ground")

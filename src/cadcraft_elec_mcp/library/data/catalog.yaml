@@ -13,6 +13,13 @@ devices:
   - {id: generic-safety-relay, description: "Relé de seguridad", kind: safety_relay, width_mm: 22.5, height_mm: 100, depth_mm: 120}
   - {id: generic-main-switch, description: "Interruptor general 3P", kind: main_switch, mount: door, width_mm: 64, height_mm: 64, depth_mm: 70}
   - {id: generic-fuse-holder, description: "Portafusible 10x38", kind: fuse, width_mm: 18, height_mm: 81, depth_mm: 60}
+  - {id: generic-fuse-holder-1pn, description: "Portafusible 1P+N 10x38", kind: fuse, width_mm: 36, height_mm: 81, depth_mm: 60}
+  - {id: generic-rcd-2p, description: "Interruptor diferencial 2P 30 mA", kind: rcd, width_mm: 36, height_mm: 90, depth_mm: 75, terminals: ["1", "2", "3", "4"]}
+  - {id: generic-spd-1pn, description: "Supresor de picos 1P+N (SPD tipo 2)", kind: surge_protector, width_mm: 36, height_mm: 90, depth_mm: 66}
+  - {id: generic-disconnector-2p, description: "Seccionador portafusible 2P", kind: main_switch, width_mm: 36, height_mm: 81, depth_mm: 60}
+  - {id: siemens-5sl4101-6, manufacturer: Siemens, part_number: 5SL4101-6, description: "Magnetotérmico 1P C1 (5SL4)", kind: mcb, width_mm: 18, height_mm: 90, depth_mm: 70, terminals: ["1", "2"]}
+  - {id: meanwell-hdr-30-24, manufacturer: Mean Well, part_number: HDR-30-24, description: "Fuente 24 VDC 1.5 A riel DIN", kind: psu, width_mm: 35, height_mm: 90, depth_mm: 54.5, terminals: ["L", "N", "+V", "-V"]}
+  - {id: meanwell-hdr-60-24, manufacturer: Mean Well, part_number: HDR-60-24, description: "Fuente 24 VDC 2.5 A riel DIN", kind: psu, width_mm: 52.5, height_mm: 90, depth_mm: 54.5, terminals: ["L", "N", "+V", "-V"]}
   # --- Power supplies -----------------------------------------------------------------------------
   - {id: generic-psu-24v-5a, description: "Fuente 24 VDC 5 A", kind: psu, width_mm: 40, height_mm: 125, depth_mm: 125, terminals: ["L", "N", "PE", "+", "+", "-", "-"]}
   - {id: generic-psu-24v-10a, description: "Fuente 24 VDC 10 A", kind: psu, width_mm: 60, height_mm: 125, depth_mm: 125, terminals: ["L", "N", "PE", "+", "+", "-", "-"]}

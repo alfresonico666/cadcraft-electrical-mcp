@@ -17,7 +17,8 @@ def test_devices_fill_rows_without_overlaps() -> None:
             assert not a.overlaps(b)
         for duct in plan.ducts:
             assert not a.overlaps(duct)
-    assert len(plan.rails) == 2  # 12 x 45 mm on 270 mm rails (400 - 2x15 margin - 2x(40+10) ducts)
+    # 270 mm rails (400 - 2x15 margin - 2x(40+10) ducts); 20 % spare -> 216 mm -> 4 devices per rail
+    assert len(plan.rails) == 3
 
 
 def test_overflow_is_reported() -> None:
@@ -40,3 +41,11 @@ def test_manual_placement() -> None:
     plan = plan_backplate(spec, boxes(2))
     manual = next(d for d in plan.devices if d.box.tag == "-QA1")
     assert (manual.rect.x, manual.rect.y, manual.rail) == (10, 10, None)
+
+
+def test_auto_fill_keeps_spare_when_possible() -> None:
+    spec = CabinetSpec(plate_width=400, plate_height=700, spare_ratio=0.2)
+    plan = plan_backplate(spec, boxes(10))
+    assert not plan.unplaced
+    assert all(rail.spare_ratio >= 0.2 - 1e-6 for rail in plan.rails)
+    assert not [w for w in plan.warnings if "spare" in w]

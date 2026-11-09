@@ -18,6 +18,7 @@ tag:
     mpcb: MPCB
     fuse: FU
     rcd: GFCI
+    surge_protector: SPD
     main_switch: DISC
     overload: OL
     psu: PS

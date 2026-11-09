@@ -168,18 +168,20 @@ def build_cabinet_block(
 
 def _ducts(pen: _Painter, spec: CabinetSpec, plan: CabinetPlan) -> None:
     inner = 4.0
+    horizontal = [d for d in plan.ducts if d.w >= d.h]
     for duct in plan.ducts:
         pen.rect(duct, "L-DUCT")
         if duct.w >= duct.h:
             pen.line((duct.x, duct.y + inner), (duct.x2, duct.y + inner), "L-DUCT")
             pen.line((duct.x, duct.y2 - inner), (duct.x2, duct.y2 - inner), "L-DUCT")
-            pen.text(
-                f"Canaleta {spec.duct_width:g}x{spec.duct_depth:g}",
-                (duct.x2 - 6.0, duct.y + duct.h / 2),
-                2.0,
-                layer="L-DUCT",
-                align=Align.MIDDLE_RIGHT,
-            )
+            if horizontal.index(duct) == 0:  # duct type written once, on the top duct
+                pen.text(
+                    f"Canaletas {spec.duct_width:g}x{spec.duct_depth:g}",
+                    (duct.x2 - 6.0, duct.y + duct.h / 2),
+                    2.0,
+                    layer="L-DUCT",
+                    align=Align.MIDDLE_RIGHT,
+                )
             pen.holes_along(duct.x, duct.x2, duct.y + duct.h / 2)
         else:
             pen.line((duct.x + inner, duct.y), (duct.x + inner, duct.y2), "L-DUCT")
@@ -194,39 +196,65 @@ def _rails(pen: _Painter, plan: CabinetPlan) -> None:
         pen.line((rail.x_start, rail.y_center - 12.5), (x1, rail.y_center - 12.5), "L-RAIL")
         pen.line((rail.x_start, rail.y_center + 12.5), (x1, rail.y_center + 12.5), "L-RAIL")
         pen.holes_along(rail.x_start, x1, rail.y_center, inset=15.0)
-        # label inside the wire duct below the rail row, so it never hides a device
+        # occupancy written in the duct below the row, starting where the free rail length begins
         below = horizontal_ducts[rail.index + 1] if rail.index + 1 < len(horizontal_ducts) else None
-        at = (below.x + 6.0, below.y + below.h / 2) if below else (rail.x_start, rail.y_center - 19.0)
+        y = below.y + below.h / 2 if below else rail.y_center - 19.0
+        x = min(rail.x_start + rail.used + 4.0, rail.x_start + rail.length * 0.55)
         pen.text(
-            f"Riel TS35-{rail.index + 1}  L={rail.length:.0f}  ({100 * rail.spare_ratio:.0f}% libre)",
-            at,
+            f"TS35-{rail.index + 1}: {100 * rail.spare_ratio:.0f}% libre",
+            (x, y),
             2.0,
-            align=Align.MIDDLE_LEFT if below else Align.TOP_LEFT,
+            align=Align.MIDDLE_LEFT,
         )
 
 
 def _device(pen: _Painter, models: ModelBlocks, box: DeviceBox, rect: Rect, label: str) -> None:
+    """Device outline (or real vendor model) + designation.
+
+    Real models keep the designation above them (their drawing fills the outline); plain outlines carry
+    the designation inside, at the top, rotated for narrow DIN devices (EPLAN-like) so neighbours on a
+    rail never collide, and the part number / description lower in the body.
+    """
     model = models.get(box.model_dxf)
     if model:
         pen.block.add_blockref(model, (rect.x, rect.y), dxfattribs={"layer": "L-DEVICE"})
-    else:
-        pen.rect(rect, "L-DEVICE")
-        vertical = rect.w < rect.h * 0.6
-        span = rect.h if vertical else rect.w
-        height = min(2.0, span / max(len(box.label), 1) * 1.4 / pen.k)
         pen.text(
-            box.label, (rect.x + rect.w / 2, rect.y + rect.h / 2), height, rotation=90 if vertical else 0
+            label,
+            (rect.x + rect.w / 2, rect.y2 + 1.0 * pen.k),
+            3.0,
+            layer="E-DESIG",
+            align=Align.BOTTOM_CENTER,
         )
-    # designation above the device; rotated when the device is narrower than the text
-    narrow = rect.w < 3.0 * pen.k * len(label) * 0.6
-    pen.text(
-        label,
-        (rect.x + rect.w / 2, rect.y2 + 1.0 * pen.k),
-        3.0,
-        layer="E-DESIG",
-        align=Align.MIDDLE_LEFT if narrow else Align.BOTTOM_CENTER,
-        rotation=90 if narrow else 0,
-    )
+        return
+    pen.rect(rect, "L-DEVICE")
+    vertical = rect.w < rect.h * 0.6
+    tag_h = min(3.0, rect.w * 0.6 / pen.k) if vertical else min(3.0, rect.h * 0.3 / pen.k)
+    if vertical:
+        pen.text(
+            label,
+            (rect.x + rect.w / 2, rect.y2 - 1.0 * pen.k),
+            tag_h,
+            layer="E-DESIG",
+            align=Align.MIDDLE_RIGHT,
+            rotation=90,
+        )
+        tag_len = len(label) * tag_h * pen.k * 0.65 + 2.0 * pen.k
+        body = (rect.y, rect.y2 - tag_len)
+    else:
+        pen.text(
+            label,
+            (rect.x + rect.w / 2, rect.y2 - 1.0 * pen.k),
+            tag_h,
+            layer="E-DESIG",
+            align=Align.TOP_CENTER,
+        )
+        body = (rect.y, rect.y2 - tag_h * pen.k * 1.6)
+    span = (body[1] - body[0]) if vertical else rect.w
+    if box.label and span > 0:
+        height = min(2.0, span / max(len(box.label), 1) * 1.4 / pen.k, rect.w * 0.45 / pen.k)
+        pen.text(
+            box.label, (rect.x + rect.w / 2, (body[0] + body[1]) / 2), height, rotation=90 if vertical else 0
+        )
 
 
 def _door_devices(

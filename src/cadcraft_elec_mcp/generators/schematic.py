@@ -15,6 +15,7 @@ def to_ladder(path: CircuitPath) -> LadderPath:
         return_rail=path.return_rail,
         pe=path.pe,
         slot=(path.column - 1) if path.column else None,
+        feeds=list(path.feeds) if path.feeds else None,
     )
 
 

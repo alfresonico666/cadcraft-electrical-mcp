@@ -248,7 +248,7 @@ class Potentials(Rule):
 
     def check(self, ctx: ValidationContext) -> Iterable[Issue]:
         declared = {p.name for p in ctx.project.potentials}
-        used = {
+        used = {f for s in ctx.project.sheets for p in s.paths for f in (p.feeds or [])} | {
             rail for s in ctx.project.sheets for p in s.paths for rail in [*p.supply, p.return_rail] if rail
         }
         for rail in sorted(used - declared):

@@ -10,7 +10,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..errors import DuplicateError, NotFoundError
 from .designation import natural_key
@@ -31,6 +31,7 @@ class DeviceKind(StrEnum):
     MPCB = "mpcb"
     FUSE = "fuse"
     RCD = "rcd"
+    SURGE_PROTECTOR = "surge_protector"
     MAIN_SWITCH = "main_switch"
     OVERLOAD = "overload"
     PSU = "psu"
@@ -174,6 +175,19 @@ class CircuitPath(_Model):
     return_rail: str | None = Field(default=None, description="Bottom rail, e.g. 0V or N")
     pe: bool = Field(default=False, description="Connect the last element to the PE rail")
     column: int | None = Field(default=None, ge=1, description="Force a column (1-based)")
+    feeds: list[str] | None = Field(
+        default=None,
+        description="Potentials this path feeds after its last element, one per pole (e.g. ['L1','N1'] "
+        "after the main protection, or ['24V_ACT']). Drawn as continuation arrows.",
+    )
+
+    @model_validator(mode="after")
+    def _check_feeds(self) -> CircuitPath:
+        if self.feeds is not None and len(self.feeds) != len(self.supply):
+            raise ValueError("feeds needs one potential per pole (same length as supply)")
+        if self.feeds is not None and self.return_rail is not None:
+            raise ValueError("a path either feeds new potentials or returns to a rail, not both")
+        return self
 
 
 class SheetSpec(_Model):

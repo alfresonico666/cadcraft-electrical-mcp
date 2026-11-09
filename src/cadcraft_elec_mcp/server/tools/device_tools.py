@@ -10,7 +10,7 @@ from mcp.server.mcpserver import MCPServer
 from ...application import devices
 from ...application.session import Session
 from ...domain.model import DeviceKind, Mount
-from ...errors import LibraryError
+from ...errors import LibraryError, NotFoundError
 from ...library import CatalogEntry, import_model
 from ..annotations import DESTRUCTIVE, READ, WRITE
 from ..errors import tool_errors
@@ -66,18 +66,31 @@ def register(server: MCPServer, session: Session) -> None:
             keep_dimensions=keep_dimensions,
             keep_texts=keep_texts,
         )
-        entry = CatalogEntry(
-            id=catalog_id,
-            manufacturer=manufacturer,
-            part_number=part_number,
-            description=description,
-            kind=kind,
-            mount=mount,
-            width_mm=report.width_mm,
-            height_mm=report.height_mm,
-            ports=list(ports or []),
-            model_dxf=str(report.path),
-        )
+        geometry: dict[str, Any] = {
+            "width_mm": report.width_mm,
+            "height_mm": report.height_mm,
+            "model_dxf": str(report.path),
+        }
+        try:  # existing entry (e.g. built-in S7-1200): keep its I/O, ports, terminals; add the model
+            base = session.catalog.get(catalog_id)
+            overrides = {
+                "manufacturer": manufacturer,
+                "part_number": part_number,
+                "description": description,
+                "ports": ports,
+            }
+            entry = base.model_copy(update={**{k: v for k, v in overrides.items() if v}, **geometry})
+        except NotFoundError:
+            entry = CatalogEntry(
+                id=catalog_id,
+                manufacturer=manufacturer,
+                part_number=part_number,
+                description=description,
+                kind=kind,
+                mount=mount,
+                ports=list(ports or []),
+                **geometry,
+            )
         catalog_file = session.catalog.upsert_user_entry(entry)
         return {
             "model_dxf": str(report.path),

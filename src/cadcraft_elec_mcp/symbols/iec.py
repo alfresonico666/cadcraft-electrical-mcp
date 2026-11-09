@@ -72,6 +72,25 @@ def mpcb(p: Pen, poles: int, pitch: float) -> None:
         p.text(-7.0, -8.2, "I>", 1.8)
 
 
+def rcd(p: Pen, poles: int, pitch: float) -> None:
+    """Residual current device: switching contact + residual-current release (IΔ)."""
+    _contact_no(p)
+    x = _actuator(p)
+    if x is None:
+        return
+    p.rect(x - 4.0, -6.3, x, -3.3)
+    p.text(x - 2.0, -4.8, "IΔ", 1.6)
+
+
+def surge(p: Pen, poles: int, pitch: float) -> None:
+    """Surge protective device (varistor) drawn in series as a protection module."""
+    p.stub_in(-2)
+    p.rect(-2.5, -2.0, 2.5, -8.0)
+    p.line(-1.8, -7.2, 1.8, -2.8)
+    p.line(-1.8, -7.2, -0.6, -7.2)
+    p.stub_out(-8, L)
+
+
 def pushbutton_no(p: Pen, poles: int, pitch: float) -> None:
     _contact_no(p)
     x = _actuator(p)
@@ -132,7 +151,7 @@ def coil_valve(p: Pen, poles: int, pitch: float) -> None:
     coil(p, poles, pitch)
     p.line(-3.0, -7.0, 3.0, -3.0)  # electromechanical actuator for valves
     if p.with_actuator:
-        p.poly([(-5.5, -3.8), (-4.0, -3.8), (-4.0, -6.2), (-5.5, -6.2)])
+        p.poly([(-7.5, -3.8), (-6.0, -3.8), (-6.0, -6.2), (-7.5, -6.2)])
 
 
 def lamp(p: Pen, poles: int, pitch: float) -> None:
@@ -216,6 +235,8 @@ SYMBOLS: dict[str, SymbolDef] = {
         SymbolDef("disconnector", "Seccionador / interruptor principal", L, disconnector, "power"),
         SymbolDef("mcb", "Interruptor magnetotérmico", L, mcb, "power"),
         SymbolDef("mpcb", "Guardamotor", L, mpcb, "power"),
+        SymbolDef("rcd", "Interruptor diferencial (RCD)", L, rcd, "power"),
+        SymbolDef("surge", "Supresor de picos (SPD)", L, surge, "power", half_width=2.5),
         SymbolDef("pushbutton_no", "Pulsador NA", L, pushbutton_no),
         SymbolDef("pushbutton_nc", "Pulsador NC", L, pushbutton_nc),
         SymbolDef("estop", "Paro de emergencia (NC, enclavamiento)", L, estop),

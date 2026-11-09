@@ -21,12 +21,6 @@ NODE_H = 18.0
 LEVEL_GAP = 20.0
 MIN_NODE_W = 26.0
 PROTOCOL_LAYER = {Protocol.IOLINK: "E-NET-IOLINK"}
-PROTOCOL_LABEL = {
-    Protocol.PROFINET: "PROFINET",
-    Protocol.ETHERNET: "Ethernet",
-    Protocol.IOLINK: "IO-Link",
-    Protocol.PROFISAFE: "PROFIsafe",
-}
 
 
 @dataclass
@@ -155,21 +149,29 @@ def generate_network(ctx: BuildContext, spec: SheetSpec) -> list[int]:
                     layer="E-TERMINAL",
                     align="TOP_LEFT",
                 )
-            # child port + cable on one line just above the child box (the drop is too short for text)
-            label = child_port
-            if len(points) == 4:
-                label += "  " + PROTOCOL_LABEL[link.protocol] + (f" {link.cable}" if link.cable else "")
-                if link.length_m:
-                    label += f" {link.length_m:g} m"
-            if label.strip():
+            # just above the child box: port on the first line, cable (+ length) on the second one;
+            # the protocol is given by the line colour (legend at the bottom of the sheet)
+            cable = " ".join(
+                x for x in (link.cable or "", f"{link.length_m:g} m" if link.length_m else "") if x
+            )
+            for line_no, value in enumerate(x for x in (child_port, cable) if x):
                 add_text(
                     msp,
-                    label.strip(),
-                    (end[0] + 0.8, end[1] + 0.8),
+                    value,
+                    (end[0] + 0.8, end[1] + 0.8 + line_no * text.terminal * 1.4),
                     height=text.terminal,
-                    layer="E-TERMINAL",
+                    layer="E-TERMINAL" if line_no == 0 and value == child_port else "E-TEXT",
                     align="BOTTOM_LEFT",
                 )
+    _legend(msp, x0 + 2.0, y0 + 6.0, text.general)
     if spec.note:
         add_text(msp, spec.note, (x0 + 1.0, y0 + 2.0), height=text.general, layer="E-TEXT")
     return [geo.number]
+
+
+def _legend(msp, x: float, y: float, height: float) -> None:  # type: ignore[no-untyped-def]
+    """Line-colour legend (PROFINET / Ethernet vs IO-Link)."""
+    for i, (layer, label) in enumerate((("E-NET", "PROFINET / Ethernet"), ("E-NET-IOLINK", "IO-Link"))):
+        yy = y + i * height * 1.8
+        msp.add_line((x, yy), (x + 12.0, yy), dxfattribs={"layer": layer})
+        add_text(msp, label, (x + 14.0, yy), height=height, layer="E-TEXT", align="MIDDLE_LEFT")
